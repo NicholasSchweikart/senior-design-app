@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="edu.mtu.team9.aspirus.LiveSessionActivity">
+
+    <include
+        android:id="@+id/tool_bar"
+        layout="@layout/tool_bar"
+        />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tool_bar">
+
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            android:id="@+id/layoutReadyScreen"
+            >
+
+
+            <TextView
+                android:text="Score"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView"
+                android:textAppearance="@android:style/TextAppearance.Material.Display1"
+                android:textAlignment="center" />
+
+            <mobi.gspd.segmentedbarview.SegmentedBarView
+                android:id="@+id/bar_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                app:sbv_empty_segment_text="No segments"
+                app:sbv_segment_gap_width="5dp"
+                app:sbv_segment_text_size="28sp"
+                app:sbv_show_description_text="true"
+                app:sbv_side_style="rounded"
+                app:sbv_side_text_style="twoSided"
+                app:sbv_value_sign_height="50dp"
+                app:sbv_value_sign_round="8dp"
+                app:sbv_value_sign_width="30dp"
+                app:sbv_bar_height="35dp"
+                />
+
+            <com.intrusoft.scatter.PieChart
+                android:id="@+id/pie_chart"
+                android:layout_width="300dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_height="300dp"
+                app:aboutChart="Leg Breakdown"
+                app:aboutTextSize="40"
+                app:equalPartition="false"
+                app:centerColor="@color/colorAccent"
+                />
+
+            <Button
+                android:text="Done"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/done_button"
+                style="@android:style/Widget.Material.Light.Button"
+                android:background="@android:color/holo_green_dark"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_margin="20dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+
+
+</RelativeLayout>
