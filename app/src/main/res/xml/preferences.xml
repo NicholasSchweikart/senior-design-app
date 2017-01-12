@@ -1,26 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_title_login">
+        <!-- NOTE: EditTextPreference accepts EditText attributes. -->
+        <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+        <EditTextPreference
+            android:defaultValue="@string/pref_default_display_name"
+            android:inputType="text"
+            android:key="user_name"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/pref_title_display_name"
+
+            />
+        <EditTextPreference
+            android:title="@string/pref_title_userpassword"
+            android:inputType="textPassword"
+            android:key="user_password"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:defaultValue="@string/pref_default_userpassword"
+            />
+    </PreferenceCategory>
     <PreferenceCategory
-        android:title="System Setup"
-        android:key="pref_key_data_settings">
-        <EditTextPreference
-            android:key="pref_key_log_data"
-            android:summary="Right Anklet UUID"
-            android:title="Data Logging"/>
-        <EditTextPreference
-            android:key="pref_key_log_data"
-            android:summary="Left Anklet UUID"
-            android:title="Data Logging"/>
+        android:title="@string/pref_title_data_behaviour">
+        <CheckBoxPreference
+            android:title="@string/pref_title_datalog_enable"
+            android:summary="@string/pref_datalog_summary"
+            android:key="data_logging_enabled"
+            android:defaultValue="false"
+            />
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="Device Behaviour"
-        android:key="pref_key_data_settings">
-        <SwitchPreference
-            android:key="pref_key_log_data"
-            android:summary="Enabling this feature turn on data logging for all runs"
-            android:title="Data Logging"/>
+    <PreferenceCategory android:title="@string/pref_title_anklet_setup">
 
     </PreferenceCategory>
+
 </PreferenceScreen>

@@ -19,6 +19,11 @@ public class SettingsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        // Display the fragment as the main content.
+        getFragmentManager().beginTransaction()
+                .replace(R.id.content_frame, new SettingsFragment())
+                .commit();
+
     }
     @Override
     public boolean onCreateOptionsMenu (Menu menu){
