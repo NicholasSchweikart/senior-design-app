@@ -45,12 +45,14 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
         });
     }
 
-    public void startNewSession(){
+    public void startNewSession() {
         startActivity(new Intent(this, LiveSessionActivity.class));
     }
-    public void startHelp(){
+
+    public void startHelp() {
         startActivity(new Intent(this, SessionReviewActivity.class));
     }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
         Log.d(TAG, "onResume");
 
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -112,14 +115,17 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
 
         }
     }
+
     void showDialog() {
         DialogFragment newFragment = new SettingsAuthFragment();
         newFragment.show(getFragmentManager(), "dialog");
     }
+
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, String pswrd, String usr) {
+        //TODO use the actual SharedPref object to get the stored login info
         // User touched the dialog's positive button, compare password and username for match
-        if(usr.equals("a") && pswrd.equals("a")){
+        if (usr.equals("a") && pswrd.equals("a")) {
             startActivity(new Intent(this, SettingsActivity.class));
         }
     }

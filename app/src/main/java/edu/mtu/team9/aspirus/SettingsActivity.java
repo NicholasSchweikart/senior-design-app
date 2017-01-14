@@ -42,4 +42,9 @@ public class SettingsActivity extends AppCompatActivity {
                 return false;
         }
     }
+
+    //TODO Implement on PrefChange listener and actions
+
+    //TODO Complete doctor access page for any further features
+
 }

@@ -34,24 +34,7 @@ public class GaitAnalyzer {
 
     }
 
-    public void processStep(Anklet anklet, byte[] data){
 
-        // Extract the step time
-        int time =  ((0xFF & data[5]) << 24) | ((0xFF & data[4]) << 16) |
-                    ((0xFF & data[3]) << 8) | (0xFF & data[2]);
-
-        // Extract  the step length
-        // int length = (0xFF & data[6]) | 0;
-
-        Log.d(TAG, "Data Message [" + (char)anklet.anklet_id + "D |" + time + " | " + data[6] + " | " + data[7] + " ]");
-
-        // Update the anklet stats
-        anklet.TOTAL_STEPS += 1;
-        anklet.TOTAL_TIME += time;
-
-        // Update internal metrics
-
-    }
 
     // Main loop that runs to watch all data fields. Executes audio corrections.
     private TimerTask mainLoop = new TimerTask() {

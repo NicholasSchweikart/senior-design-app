@@ -32,5 +32,5 @@ public class SettingsFragment extends PreferenceFragment{
         //mListener = null;
     }
 
-
+    //TODO link listener to change the summary fields for username/password
 }
