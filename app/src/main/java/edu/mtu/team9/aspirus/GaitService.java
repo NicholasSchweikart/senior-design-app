@@ -14,24 +14,16 @@ import android.util.Log;
 public class GaitService extends Service {
 
     public static final String TAG = "Gait-Service";
-
     public final static String ACTION_ANKLETS_READY = "ANKLETS_READY",
                                 ACTION_STEP_MESSAGEL = "STEP_MESSAGE_L",
                                 ACTION_STEP_MESSAGER = "STEP_MESSAGE_R";
-
     private final IBinder myBinder = new MyLocalBinder();
-
     private static final String LEFT_ANKLET_ADDRESS = "C3:02:46:89:C4:DC";
     private static final String RIGHT_ANKLET_ADDRESS = "E2:6D:EE:37:74:1E";
-
     public Anklet leftAnklet;
     public Anklet rightAnklet;
-
-    private boolean SYSTEM_READY = false;
-
+    public boolean SERVICE_READY = false;
     private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
-
     private Handler handler = new Handler();
 
     @Override
@@ -67,24 +59,51 @@ public class GaitService extends Service {
         rightAnklet = new Anklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
         leftAnklet.setAnkletListener(ankletListener);
         rightAnklet.setAnkletListener(ankletListener);
-
         leftAnklet.connectAnklet();
-        rightAnklet.connectAnklet();
 
         Log.d(TAG, "gait service ready!");
         return true;
     }
 
+    public Anklet.AnkletListener ankletListener = new Anklet.AnkletListener() {
+        @Override
+        public void onStrideMessage(char id) {
+            Log.d(TAG, "onStrideMessage: " + id);
+
+        }
+
+        @Override
+        public void onHeelDown(char anklet_id) {
+            Log.d(TAG, "onHeelDown: " + anklet_id);
+
+        }
+
+        @Override
+        public void onAnkletReady(char anklet_id) {
+            Log.d(TAG, "onAnkletReady: " + anklet_id);
+            if(anklet_id == 'L'){
+                rightAnklet.connectAnklet();
+            }else if(anklet_id == 'R'){
+                updateUI();
+            }
+        }
+
+        @Override
+        public void onLiftOff(char anklet_id) {
+            Log.d(TAG, "onLiftOff: " + anklet_id);
+        }
+    };
+
     private void updateUI(){
 
         if(rightAnklet.ankletState == ANKLET_STATE.READY && leftAnklet.ankletState == ANKLET_STATE.READY){
-            if(!SYSTEM_READY){
+            if(!SERVICE_READY){
                 Log.d(TAG, "System is ready to go, altering UI thread...");
                 broadcastUpdate(ACTION_ANKLETS_READY);
-                SYSTEM_READY = true;
+                SERVICE_READY = true;
             }
         }else{
-            SYSTEM_READY = false;
+            SERVICE_READY = false;
         }
     }
 
@@ -104,26 +123,6 @@ public class GaitService extends Service {
         return true;
     }
 
-    public Anklet.AnkletListener ankletListener = new Anklet.AnkletListener() {
-        @Override
-        public void onStrideMessage(char id) {
-            Log.d(TAG, "onStrideMessage: " + id);
-
-        }
-
-        @Override
-        public void onHeelDown(char id) {
-            Log.d(TAG, "onHeelDown: " + id);
-
-        }
-
-        @Override
-        public void onAnkletReady(char id) {
-            Log.d(TAG, "unlocking UI for session");
-            updateUI();
-        }
-    };
-
     @Override
     public void onCreate() {
         Log.d(TAG, "onCreate");
@@ -131,7 +130,7 @@ public class GaitService extends Service {
 
     @Override
     public void onDestroy() {
-
+        Log.d(TAG, "onDestroy");
     }
 
 }

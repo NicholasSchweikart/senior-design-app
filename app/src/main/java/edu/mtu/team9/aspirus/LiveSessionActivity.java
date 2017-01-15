@@ -43,7 +43,6 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
     private GaitService gaitService;
     private BluetoothAdapter bluetoothAdapter = null;
     private Handler handler;
-    private boolean system_ready = false;
 
     // UI components
     private Button startButton, pauseButton, endButton;
@@ -70,7 +69,7 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
 
         // Start a timer to restart everything if we dont connect within 5 seconds
         handler = new Handler();
-        handler.postDelayed(connectionCheck,5000);
+        handler.postDelayed(connectionCheck,20000);
 
         layoutWaitScreen =  findViewById(R.id.layoutWaitScreen);
         layoutReadyScreen = findViewById(R.id.layoutReadyScreen);
@@ -202,7 +201,7 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
     {
 
         try {
-            //LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(gaitReciever);
         } catch (Exception ignore) {
             Log.e(TAG, ignore.toString());
         }
@@ -249,7 +248,7 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
     private TimerTask connectionCheck = new TimerTask() {
         @Override
         public void run() {
-            if(!system_ready)
+            if(!gaitService.SERVICE_READY)
             {
                 // Destroy the GaitService and retry everything
                 Log.d(TAG, "Failed to connect anklets");
@@ -268,7 +267,7 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
     public void onDialogPositiveClick(DialogFragment dialog) {
         // Restart the gait service
         enableGaitService();
-        handler.postDelayed(connectionCheck, 5000);
+        handler.postDelayed(connectionCheck, 20000);
     }
 
     @Override
