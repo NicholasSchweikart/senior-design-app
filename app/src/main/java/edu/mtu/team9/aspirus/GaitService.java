@@ -1,7 +1,6 @@
 package edu.mtu.team9.aspirus;
 
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
@@ -27,6 +26,46 @@ public class GaitService extends Service {
     private Handler handler = new Handler();
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d(TAG, "onCreate");
+
+        if (mBluetoothManager == null) {
+            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            if (mBluetoothManager == null) {
+                Log.e(TAG, "Unable to initialize BluetoothManager.");
+            }
+        }
+
+        BleUtils.resetBluetoothAdapter(getApplicationContext(), new BleUtils.ResetBluetoothAdapterListener() {
+            @Override
+            public void resetBluetoothCompleted() {
+                leftAnklet = new Anklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
+                rightAnklet = new Anklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
+                leftAnklet.setAnkletListener(ankletListener);
+                rightAnklet.setAnkletListener(ankletListener);
+                rightAnklet.connect();
+            }
+        });
+
+
+
+        Log.d(TAG, "gait service ready!");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy");
+
+//        leftAnklet.shutDown();
+//        rightAnklet.shutDown();
+        leftAnklet = null;
+        rightAnklet = null;
+        this.stopSelf();
+    }
+
+    @Override
     public IBinder onBind(Intent arg0) {
         // TODO Auto-generated method stub
         return myBinder;
@@ -41,28 +80,6 @@ public class GaitService extends Service {
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }
-
-    public boolean initialize() {
-
-        Log.d(TAG, "initializing gait service...");
-
-        if (mBluetoothManager == null) {
-            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            if (mBluetoothManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
-                return false;
-            }
-        }
-
-        leftAnklet = new Anklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
-        rightAnklet = new Anklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
-        leftAnklet.setAnkletListener(ankletListener);
-        rightAnklet.setAnkletListener(ankletListener);
-        leftAnklet.connectAnklet();
-
-        Log.d(TAG, "gait service ready!");
-        return true;
     }
 
     public Anklet.AnkletListener ankletListener = new Anklet.AnkletListener() {
@@ -81,56 +98,49 @@ public class GaitService extends Service {
         @Override
         public void onAnkletReady(char anklet_id) {
             Log.d(TAG, "onAnkletReady: " + anklet_id);
-            if(anklet_id == 'L'){
-                rightAnklet.connectAnklet();
-            }else if(anklet_id == 'R'){
-                updateUI();
+
+            if(anklet_id == 'R')
+            {
+                leftAnklet.connect();
+                return;
+            }
+            if(rightAnklet.isReady() && leftAnklet.isReady()){
+                if(!SERVICE_READY){
+                    Log.d(TAG, "System is ready to go, altering UI thread...");
+                    broadcastUpdate(ACTION_ANKLETS_READY);
+                    SERVICE_READY = true;
+                }
+            }else{
+                SERVICE_READY = false;
             }
         }
 
         @Override
         public void onLiftOff(char anklet_id) {
             Log.d(TAG, "onLiftOff: " + anklet_id);
+
         }
     };
 
-    private void updateUI(){
-
-        if(rightAnklet.ankletState == ANKLET_STATE.READY && leftAnklet.ankletState == ANKLET_STATE.READY){
-            if(!SERVICE_READY){
-                Log.d(TAG, "System is ready to go, altering UI thread...");
-                broadcastUpdate(ACTION_ANKLETS_READY);
-                SERVICE_READY = true;
-            }
-        }else{
-            SERVICE_READY = false;
-        }
-    }
-
-    public boolean startSystem(){
+    public void startSystem(){
 
         // Start both the anklets
         leftAnklet.startAnklet();
         rightAnklet.startAnklet();
-        return true;
     }
 
-    public boolean stopSystem(){
+    public void pauseSystem() {
+
+        leftAnklet.pauseAnklet();
+        rightAnklet.pauseAnklet();
+    }
+
+    public void stopSystem(){
 
         // Stop both the anklets
-        leftAnklet.shutdownAnklet();
-        rightAnklet.shutdownAnklet();
-        return true;
-    }
+        leftAnklet.shutDown();
+        rightAnklet.shutDown();
 
-    @Override
-    public void onCreate() {
-        Log.d(TAG, "onCreate");
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.d(TAG, "onDestroy");
     }
 
 }

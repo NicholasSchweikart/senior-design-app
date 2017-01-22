@@ -1,54 +1,60 @@
 package edu.mtu.team9.aspirus;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
 
-import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
 /**
- * Created by nssch on 10/30/2016.
+ * Created for Aspirus2
+ * By: nssch on 10/30/2016.
+ * Description: This class builds an API and object layer around the wireless 'Anklets' for the
+ * gait project. The following class handles all Bluetooth Comm. as well as the recording of
+ * various gait metrics.
  */
 
-public class Anklet {
+public class Anklet implements BleManager.BleManagerListener{
 
     public static final UUID TX_POWER_UUID = UUID.fromString("00001804-0000-1000-8000-00805f9b34fb");
     public static final UUID TX_POWER_LEVEL_UUID = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
     public static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-    public static final UUID FIRMWARE_REVISON_UUID = UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb");
-    public static final UUID DIS_UUID = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
     public static final UUID RX_SERVICE_UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID RX_CHAR_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+    public static final String UUID_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    public static final String UUID_RX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+    public static final String UUID_TX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
     private String TAG;
     public ANKLET_STATE ankletState;
     private String device_address;
     public char anklet_id;
-    public int total_time = 0;
-    public int total_steps = 0;
-    public boolean in_stride = false;
-    private AnkletListener listener;
-    private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothGatt bluetoothGatt;
     private Timer timer = new Timer();
-    private int connection_attempts = 0;
+    // Gait Metrics
+    private int totalTime,
+            totalSteps,
+            totalSwingTime,
+            totalStanceTime,
+            averageStepTime;
+
+    public boolean in_stride = false;
+
+    protected BleManager mBleManager;
+    protected BluetoothGattService mUartService;
+    private boolean isRxNotificationEnabled = false;
+
     public final byte
             RUNNING =       (byte) 'U',
             READY =         (byte) 'R',
             STOP =          (byte) 'X',
-            MESSAGE =       (byte) 'D',
+            PAUSE=          (byte) 'P',
+            MESSAGE =       (byte) 'M',
             COMMAND =       (byte) 'C',
             START =         (byte) 'S',
             STATUS =        (byte) 'S',
@@ -57,248 +63,172 @@ public class Anklet {
             HEEL_DOWN =     (byte) '_',
             EVENT =         (byte) 'E';
 
-    public byte[] message = new byte[3];
-
     private Context context;
-
-    public interface AnkletListener {
-        public void onStrideMessage(char anklet_id);
-
-        public void onHeelDown(char anklet_id);
-
-        public void onAnkletReady(char anklet_id);
-
-        public void onLiftOff(char anklet_id);
-    }
+    private AnkletListener listener;
 
     public Anklet(String device_address, char anklet_id, Context context) {
 
         this.listener = null;
         this.context = context;
         this.device_address = device_address;
-        TAG = "Anklet-Class-" + anklet_id;
+        TAG = "Anklet-" + anklet_id;
         this.anklet_id = anklet_id;
+        mBleManager = new BleManager(context);
+        mBleManager.setBleListener(this);
+    }
 
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
-        if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
-        }
+    public interface AnkletListener {
+        void onStrideMessage(char anklet_id);
 
+        void onHeelDown(char anklet_id);
+
+        void onAnkletReady(char anklet_id);
+
+        void onLiftOff(char anklet_id);
     }
 
     public void setAnkletListener(AnkletListener listener) {
         this.listener = listener;
     }
 
+    public int getTotalTime(){return totalTime;}
+
+    public int getTotalSteps(){return totalSteps;}
+
+    public boolean isReady(){
+        if(ankletState == ANKLET_STATE.READY)
+            return true;
+        return false;
+    }
+
+    public void connect(){
+        mBleManager.connect(context,device_address);
+    }
+
     public void startAnklet() {
+        Log.d(TAG, "Sending Start Command");
+
+        byte[] message = new byte[2];
         message[0] = COMMAND;
         message[1] = START;
-        txAnklet(message);
+        sendData(message);
     }
 
     public void pauseAnklet() {
-        if (ankletState != ANKLET_STATE.RUNNING)
-            return;
+        Log.d(TAG, "Sending Pause Command");
+
+        byte[] message = new byte[2];
         message[0] = COMMAND;
-        message[1] = STOP;//TODO implement complete pause functionality
-        txAnklet(message);
+        message[1] = PAUSE;
+        sendData(message);
     }
 
-    public void shutdownAnklet() {
+    public void stopAnklet() {
+        Log.d(TAG, "Sending Stop Command");
+
+        byte[] message = new byte[2];
         message[0] = COMMAND;
         message[1] = STOP;
-        txAnklet(message);
-
-        if (mBluetoothAdapter == null || bluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
-            return;
-        }
-        bluetoothGatt.disconnect();
-        Log.w(TAG, "bluetoothGatt closed");
-        bluetoothGatt.close();
-        bluetoothGatt = null;
+        sendData(message);
+        shutDown();
     }
 
-    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+    private void sendHandshake() {
+        Log.d(TAG, "Sending Handshake");
 
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        byte[] message = new byte[2];
+        message[0] = HANDSHAKE;
+        message[1] = ((byte) anklet_id);
+        sendData(message);
+    }
 
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
+    /***********************************************************************************************
+        Bluetooth Interface Section
+     **********************************************************************************************/
 
-                Log.d(TAG, "Connected to right GATT server.");
+    private void sendData(byte[] data) {
+        if (mUartService != null) {
+            // Split the value into chunks (UART service has a maximum number of characters that can be written )
+            for (int i = 0; i < data.length; i += 20) {
+                final byte[] chunk = Arrays.copyOfRange(data, i, Math.min(i + 20, data.length));
+                mBleManager.writeService(mUartService, UUID_TX, chunk);
+            }
+        } else {
+            Log.w(TAG, "Uart Service not discovered. Unable to send data");
+        }
+    }
 
-                // Attempts to discover services after successful connection.
-                Log.d(TAG, "Attempting to start service discovery" + bluetoothGatt.discoverServices());
-                ankletState = ANKLET_STATE.CONNECTED;
+    @Override
+    public void onConnecting() {
+        Log.d(TAG, "onConnecting");
+    }
 
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+    @Override
+    public void onConnected() {
+        Log.d(TAG, "onConnected");
+    }
 
-                Log.i(TAG, "Lost connection");
-                ankletState = ANKLET_STATE.DISCONNECTED;
-                bluetoothGatt.connect();//TODO flag system to trigger smart reconnect
+    @Override
+    public void onDisconnected() {
+        Log.d(TAG, "onDisconnected");
+        ankletState = ANKLET_STATE.DISCONNECTED;
+    }
+
+    @Override
+    public void onServicesDiscovered() {
+        Log.d(TAG, "onServicesDiscovered");
+        mUartService = mBleManager.getGattService(UUID_SERVICE);
+        enableRxNotifications();
+        sendHandshake();
+    }
+
+    protected void enableRxNotifications() {
+        isRxNotificationEnabled = true;
+        mBleManager.enableNotification(mUartService, UUID_RX, true);
+    }
+
+    @Override
+    public synchronized void onDataAvailable(BluetoothGattCharacteristic characteristic) {
+
+        if (characteristic.getService().getUuid().toString().equalsIgnoreCase(UUID_SERVICE)) {
+            if (characteristic.getUuid().toString().equalsIgnoreCase(UUID_RX)) {
+
+                Log.d(TAG, "RX data");
+
+                final byte[] bytes = characteristic.getValue();
+                processMessage(bytes);
             }
         }
 
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+    }
 
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+    @Override
+    public void onDataAvailable(BluetoothGattDescriptor descriptor) {
 
-                Log.i(TAG, "Service Discovered");
+    }
 
-                if (enableTXNotification()) {
+    @Override
+    public void onReadRemoteRssi(int rssi) {
 
-                    Log.d(TAG, "TX ready on anklet");
-                    ankletState = ANKLET_STATE.TXENABLED;
+    }
 
-                    // Send handshake message in 2 seconds
-                    timer.schedule(sendHandshake, 2000, 4000);
+    public void shutDown(){
+        mBleManager.disconnect();
+        mBleManager = null;
+    }
+    /**********************************************************************************************/
 
-                } else {
-                    Log.d(TAG, "TX not enabled");
-                }
-
-            } else {
-                Log.d(TAG, "onServicesDiscovered GATT failure");
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, "onCharRead Left Anklet");
-
-                byte[] data = characteristic.getValue();
-                processMessage(data);
-            }
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            Log.d(TAG, "onCharacteristicChanged Left Anklet");
-
-            byte[] data = characteristic.getValue();
-            processMessage(data);
-        }
-    };
-
-    private TimerTask sendHandshake = new TimerTask() {
-
-        @Override
-        public void run() {
-
-            message[0] = HANDSHAKE;
-            message[1] = ((byte) anklet_id);
-            connection_attempts++;
-            txAnklet(message);
-            if (connection_attempts == 2) {
-                timer.purge();
-                timer.cancel();
-                //TODO throw connection error to service
-            }
-        }
-    };
+    /***********************************************************************************************
+     * Message Processing Section
+     **********************************************************************************************/
 
     /**
-     * Connects to the GATT server hosted on the Bluetooth LE device.
-     *
-     * @return Return true if the connection is initiated successfully. The connection result
-     * is reported asynchronously through the
-     * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     * callback.
+     * Filter the incomming message for appropriate handling. Also fires events over the interface.
+     * @param data the incomming data byte array
      */
-    public boolean connectAnklet() {
-
-        if (mBluetoothAdapter == null) {
-            Log.d(TAG, "BluetoothAdapter not initialized or unspecified address.");
-            return false;
-        }
-
-        final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(device_address);
-
-        if (device == null) {
-            Log.d(TAG, "Left device not found.  Unable to connect.");
-            return false;
-        }
-
-        // We want to directly connect to the device, so we are setting the autoConnect
-        // parameter to false.
-        bluetoothGatt = device.connectGatt(context, false, mGattCallback);
-
-        return true;
-    }
-
-    /**
-     * Enable Notification on TX characteristic
-     *
-     * @return true if attempt successful
-     */
-    public boolean enableTXNotification() {
-
-        BluetoothGattService RxService = bluetoothGatt.getService(RX_SERVICE_UUID);
-        if (RxService == null) {
-            showMessage("Rx services not found!");
-            return false;
-        }
-        BluetoothGattCharacteristic TxChar = RxService.getCharacteristic(TX_CHAR_UUID);
-        if (TxChar == null) {
-            showMessage("Tx characteristics not found!");
-            return false;
-        }
-        bluetoothGatt.setCharacteristicNotification(TxChar, true);
-
-        BluetoothGattDescriptor descriptor = TxChar.getDescriptor(CCCD);
-        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        bluetoothGatt.writeDescriptor(descriptor);
-        return true;
-    }
-
-    /**
-     * Transmits a message over BLE to an anklet
-     * @param value of data to send over BLE
-     */
-    private void txAnklet(byte[] value) {
-
-        BluetoothGattService RxService = bluetoothGatt.getService(RX_SERVICE_UUID);
-        BluetoothGattCharacteristic RxChar = RxService.getCharacteristic(RX_CHAR_UUID);
-
-        if (RxService == null) {
-            showMessage("Rx services not found!");
-            return;
-        }
-
-        if (RxChar == null) {
-            showMessage("Rx characteristics not found!");
-            return;
-        }
-
-        RxChar.setValue(value);
-        boolean status = bluetoothGatt.writeCharacteristic(RxChar);
-        String txval = "";
-        try {
-            txval = new String(value, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        Log.d(TAG, "TX to anklet [" + txval + "] status: " + status);
-    }
-
-    private void showMessage(String msg) {
-        Log.e(TAG, msg);
-    }
-
     private void processMessage(byte[] data) {
 
-        String got = "XXX";
-        try {
-            got = new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        Log.d(TAG, "Processing [" + got + "]");
+        Log.d(TAG, "Processing Message: length = " + data.length);
 
         // Filter via the offset 0 flag field
         switch (data[0]) {
@@ -320,16 +250,13 @@ public class Anklet {
 
             case STATUS:
 
-                if (data[2] == READY) {
+                if (data[1] == READY) {
                     Log.d(TAG, "ready message");
-
                     ankletState = ANKLET_STATE.READY;
-                    timer.purge();
-                    timer.cancel();
                     listener.onAnkletReady(anklet_id);
                 }
 
-                if (data[2] == RUNNING){
+                if (data[1] == RUNNING){
                     Log.d(TAG, "running message");
                     ankletState = ANKLET_STATE.RUNNING;
                 }
@@ -345,19 +272,22 @@ public class Anklet {
     public void processStep(byte[] data) {
 
         // Extract the step_duration & swing_duration in microseconds
-        int step_duration = ((0xFF & data[4]) << 24) | ((0xFF & data[3]) << 16) |
+        int stepDuration = ((0xFF & data[4]) << 24) | ((0xFF & data[3]) << 16) |
                 ((0xFF & data[2]) << 8) | (0xFF & data[1]);
 
-        int swing_duration = ((0xFF & data[8]) << 24) | ((0xFF & data[7]) << 16) |
+        int swingDuration = ((0xFF & data[8]) << 24) | ((0xFF & data[7]) << 16) |
                 ((0xFF & data[6]) << 8) | (0xFF & data[5]);
 
-        //TODO Extract  the step length this method may be wrong
-        char step_length = ((char) data[9]);
-
-        Log.d(TAG, "Stride Message [ M|" + step_duration + "|"+ swing_duration + "|" + ((int) step_length) + "|" + data[5] + " ]");
+        Log.d(TAG, "Stride Message [ M|" + stepDuration + "|"+ swingDuration + "|" + data[9] + " ]");
 
         // Update the anklet stats
-        total_steps += 1;
+        totalSteps++;
+        totalTime += swingDuration + stepDuration;
+        totalSwingTime += swingDuration;
+        totalStanceTime += stepDuration - swingDuration;
+    }
 
+    private void showMessage(String msg) {
+        Log.e(TAG, msg);
     }
 }
