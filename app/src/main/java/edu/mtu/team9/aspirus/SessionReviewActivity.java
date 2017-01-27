@@ -1,10 +1,13 @@
 package edu.mtu.team9.aspirus;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import com.intrusoft.scatter.ChartData;
 import com.intrusoft.scatter.PieChart;
@@ -23,15 +26,23 @@ public class SessionReviewActivity extends AppCompatActivity {
 
 
     public static final String TAG = "session-review:";
-    private Toolbar toolbar;
+    private int[] leftSummary, rightSummary;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_session_review);
-        toolbar = (Toolbar) findViewById(R.id.tool_bar);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
+        // Parse the intent extras to get the session stats
+        Intent intent = getIntent();
+        leftSummary = intent.getIntArrayExtra("LEFT_SUMMARY");
+        rightSummary = intent.getIntArrayExtra("RIGHT_SUMMARY");
+
+        // Setup Segment bar view to show their score
         SegmentedBarView barView = (SegmentedBarView) findViewById(R.id.bar_view);
         List<Segment> segments = new ArrayList<>();
         Segment segment = new Segment(0, 30f, "Bad", Color.parseColor("#ff4444"));
@@ -40,7 +51,9 @@ public class SessionReviewActivity extends AppCompatActivity {
         segments.add(segment2);
         Segment segment3 = new Segment(70f, 100f, "Great", Color.parseColor("#00C851"));
         segments.add(segment3);
-        barView.setValueWithUnit(88f, ""); /* You can use Html tags here in unit to support superscript and subscript */
+
+        /* You can use Html tags here in unit to support superscript and subscript */
+        barView.setValueWithUnit(88f, ""); //TODO add in real analysis of session
         barView.setSegments(segments);
 
         PieChart pieChart = (PieChart) findViewById(R.id.pie_chart);
@@ -48,6 +61,14 @@ public class SessionReviewActivity extends AppCompatActivity {
         data.add(new ChartData("Left 53%", 53, Color.WHITE, Color.parseColor("#ffbb33")));
         data.add(new ChartData("Right 47%", 47, Color.WHITE, Color.parseColor("#00C851")));
         pieChart.setChartData(data);
+
+        Button doneButton = (Button) findViewById(R.id.done_button);
+        doneButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     @Override

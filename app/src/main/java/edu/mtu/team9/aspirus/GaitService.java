@@ -22,6 +22,7 @@ public class GaitService extends Service {
     public Anklet leftAnklet;
     public Anklet rightAnklet;
     public boolean SERVICE_READY = false;
+    private boolean SERVICE_RUNNING = false;
     private BluetoothManager mBluetoothManager;
     private Handler handler = new Handler();
 
@@ -37,20 +38,13 @@ public class GaitService extends Service {
             }
         }
 
-        BleUtils.resetBluetoothAdapter(getApplicationContext(), new BleUtils.ResetBluetoothAdapterListener() {
-            @Override
-            public void resetBluetoothCompleted() {
-                leftAnklet = new Anklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
-                rightAnklet = new Anklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
-                leftAnklet.setAnkletListener(ankletListener);
-                rightAnklet.setAnkletListener(ankletListener);
-                rightAnklet.connect();
-            }
-        });
+        leftAnklet = new Anklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
+        rightAnklet = new Anklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
+        leftAnklet.setAnkletListener(ankletListener);
+        rightAnklet.setAnkletListener(ankletListener);
+        rightAnklet.connect();
+        leftAnklet.connect();
 
-
-
-        Log.d(TAG, "gait service ready!");
     }
 
     @Override
@@ -58,8 +52,6 @@ public class GaitService extends Service {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
 
-//        leftAnklet.shutDown();
-//        rightAnklet.shutDown();
         leftAnklet = null;
         rightAnklet = null;
         this.stopSelf();
@@ -86,7 +78,10 @@ public class GaitService extends Service {
         @Override
         public void onStrideMessage(char id) {
             Log.d(TAG, "onStrideMessage: " + id);
-
+            if(id == 'L')
+                broadcastUpdate(ACTION_STEP_MESSAGEL);
+            if(id == 'R')
+                broadcastUpdate(ACTION_STEP_MESSAGER);
         }
 
         @Override
@@ -99,11 +94,6 @@ public class GaitService extends Service {
         public void onAnkletReady(char anklet_id) {
             Log.d(TAG, "onAnkletReady: " + anklet_id);
 
-            if(anklet_id == 'R')
-            {
-                leftAnklet.connect();
-                return;
-            }
             if(rightAnklet.isReady() && leftAnklet.isReady()){
                 if(!SERVICE_READY){
                     Log.d(TAG, "System is ready to go, altering UI thread...");
@@ -124,15 +114,13 @@ public class GaitService extends Service {
 
     public void startSystem(){
 
-        // Start both the anklets
-        leftAnklet.startAnklet();
-        rightAnklet.startAnklet();
+        SERVICE_RUNNING = true;
+        rightAnklet.connect();
+        leftAnklet.connect();
     }
 
     public void pauseSystem() {
-
-        leftAnklet.pauseAnklet();
-        rightAnklet.pauseAnklet();
+        SERVICE_RUNNING = false;
     }
 
     public void stopSystem(){
@@ -143,6 +131,18 @@ public class GaitService extends Service {
 
     }
 
+    public boolean isSERVICE_RUNNING(){
+        return this.SERVICE_RUNNING;
+    }
+
+    public int[] getTimeArrayLeft()
+    {
+        return leftAnklet.getTimeArray();
+    }
+    public int[] getTimeArrayRight()
+    {
+        return rightAnklet.getTimeArray();
+    }
 }
 
 

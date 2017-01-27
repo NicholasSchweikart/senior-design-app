@@ -20,4 +20,9 @@
         android:orderInCategory="100"
         android:title="Legal"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_logging"
+        android:orderInCategory="100"
+        android:title="Logging"
+        app:showAsAction="never" />
 </menu>

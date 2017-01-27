@@ -11,107 +11,20 @@
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar"
         />
-
-    <LinearLayout
-        android:orientation="vertical"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center_vertical|center_horizontal"
         android:layout_below="@+id/tool_bar"
-        android:visibility="visible"
-        android:id="@+id/layoutWaitScreen">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/statusText"
-            android:text="connecting hardware..." />
-
-        <ProgressBar
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/progressBar"
-            android:indeterminate="true"
-            android:paddingTop="10dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:id="@+id/layoutReadyScreen"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/tool_bar"
-        android:paddingTop="20dp">
-
-        <TextView
-            android:text="Session Time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/title"
-            android:textAppearance="@android:style/TextAppearance.Material.Display1"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textAlignment="center" />
-
-        <Chronometer
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/chronometer"
-            android:gravity="center_horizontal"
-            android:textAppearance="@android:style/TextAppearance.Material.Display1"
-            android:textColor="@color/colorAccent"
-            android:textSize="60sp" />
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingLeft="20dp"
-            android:paddingRight="20dp"
-            android:gravity="center">
-
-            <Button
-            android:text="START"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/start_button"
-            android:background="@android:color/holo_green_dark"
-            style="@style/Widget.AppCompat.Button"
-            android:elevation="1dp"
-            android:visibility="visible"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="10dp"
-                android:textSize="20sp" />
-            <Button
-                android:text="PAUSE"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/pause_button"
-                android:background="@android:color/holo_blue_light"
-                style="@style/Widget.AppCompat.Button"
-                android:elevation="1dp"
-                android:visibility="visible"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:textSize="20sp" />
-            <Button
-                android:text="END"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/end_button"
-                android:background="@android:color/holo_red_light"
-                style="@style/Widget.AppCompat.Button"
-                android:elevation="1dp"
-                android:visibility="visible"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:textSize="20sp" />
-        </LinearLayout>
-
-    </LinearLayout>
-
+        android:id="@+id/content_frame">
+        <include
+            android:id="@+id/layoutConnectingScreen"
+            layout="@layout/connecting_screen"
+        />
+        <include
+            android:id="@+id/layoutLiveScreen"
+            layout="@layout/live_screen"
+            android:visibility="gone"
+            />
+    </FrameLayout>
 
 </RelativeLayout>

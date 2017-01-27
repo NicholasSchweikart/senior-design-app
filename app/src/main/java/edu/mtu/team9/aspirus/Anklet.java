@@ -1,11 +1,18 @@
 package edu.mtu.team9.aspirus;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,7 +26,7 @@ import java.util.UUID;
  * various gait metrics.
  */
 
-public class Anklet implements BleManager.BleManagerListener{
+public class Anklet extends BluetoothGattCallback{
 
     public static final UUID TX_POWER_UUID = UUID.fromString("00001804-0000-1000-8000-00805f9b34fb");
     public static final UUID TX_POWER_LEVEL_UUID = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
@@ -37,7 +44,7 @@ public class Anklet implements BleManager.BleManagerListener{
     public char anklet_id;
     private Timer timer = new Timer();
     // Gait Metrics
-    private int totalTime,
+    public int totalTime,
             totalSteps,
             totalSwingTime,
             totalStanceTime,
@@ -45,9 +52,8 @@ public class Anklet implements BleManager.BleManagerListener{
 
     public boolean in_stride = false;
 
-    protected BleManager mBleManager;
-    protected BluetoothGattService mUartService;
-    private boolean isRxNotificationEnabled = false;
+    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothGatt bluetoothGatt;
 
     public final byte
             RUNNING =       (byte) 'U',
@@ -73,8 +79,12 @@ public class Anklet implements BleManager.BleManagerListener{
         this.device_address = device_address;
         TAG = "Anklet-" + anklet_id;
         this.anklet_id = anklet_id;
-        mBleManager = new BleManager(context);
-        mBleManager.setBleListener(this);
+
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+        if (mBluetoothAdapter == null) {
+            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
+        }
     }
 
     public interface AnkletListener {
@@ -91,9 +101,15 @@ public class Anklet implements BleManager.BleManagerListener{
         this.listener = listener;
     }
 
-    public int getTotalTime(){return totalTime;}
-
-    public int getTotalSteps(){return totalSteps;}
+    public int[] getTimeArray(){
+        int[] out = new int[5];
+        out[0] = totalTime;
+        out[1] = totalSteps;
+        out[2] = totalSwingTime;
+        out[3] = totalStanceTime;
+        out[4] = averageStepTime;
+        return out;
+    }
 
     public boolean isReady(){
         if(ankletState == ANKLET_STATE.READY)
@@ -102,119 +118,110 @@ public class Anklet implements BleManager.BleManagerListener{
     }
 
     public void connect(){
-        mBleManager.connect(context,device_address);
+
+        if (mBluetoothAdapter == null) {
+            Log.d(TAG, "BluetoothAdapter not initialized or unspecified address.");
+        }
+
+        final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(device_address);
+
+        if (device == null) {
+            Log.d(TAG, "Left device not found.  Unable to connect.");
+        }
+
+        // We want to directly connect to the device, so we are setting the autoConnect
+        // parameter to false.
+        bluetoothGatt = device.connectGatt(context, false, this);
+
     }
 
-    public void startAnklet() {
-        Log.d(TAG, "Sending Start Command");
-
-        byte[] message = new byte[2];
-        message[0] = COMMAND;
-        message[1] = START;
-        sendData(message);
-    }
-
-    public void pauseAnklet() {
-        Log.d(TAG, "Sending Pause Command");
-
-        byte[] message = new byte[2];
-        message[0] = COMMAND;
-        message[1] = PAUSE;
-        sendData(message);
-    }
-
-    public void stopAnklet() {
-        Log.d(TAG, "Sending Stop Command");
-
-        byte[] message = new byte[2];
-        message[0] = COMMAND;
-        message[1] = STOP;
-        sendData(message);
-        shutDown();
-    }
-
-    private void sendHandshake() {
-        Log.d(TAG, "Sending Handshake");
-
-        byte[] message = new byte[2];
-        message[0] = HANDSHAKE;
-        message[1] = ((byte) anklet_id);
-        sendData(message);
-    }
 
     /***********************************************************************************************
         Bluetooth Interface Section
      **********************************************************************************************/
 
-    private void sendData(byte[] data) {
-        if (mUartService != null) {
-            // Split the value into chunks (UART service has a maximum number of characters that can be written )
-            for (int i = 0; i < data.length; i += 20) {
-                final byte[] chunk = Arrays.copyOfRange(data, i, Math.min(i + 20, data.length));
-                mBleManager.writeService(mUartService, UUID_TX, chunk);
+    @Override
+    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        if (newState == BluetoothProfile.STATE_CONNECTED) {
+
+            Log.d(TAG, "Connected to GATT server.");
+
+            // Attempts to discover services after successful connection.
+            Log.d(TAG, "Attempting to start service discovery" + bluetoothGatt.discoverServices());
+            ankletState = ANKLET_STATE.READY;
+            listener.onAnkletReady(anklet_id);
+        } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+
+            Log.i(TAG, "Lost connection");
+            ankletState = ANKLET_STATE.DISCONNECTED;
+            bluetoothGatt.connect();
+        }
+    }
+
+    @Override
+    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+
+            Log.i(TAG, "onServicesDiscovered");
+
+            if (enableTXNotification()) {
+                Log.d(TAG, "onServicesDiscovered");
+
+            } else {
+                Log.d(TAG, "TX not enabled");
             }
+
         } else {
-            Log.w(TAG, "Uart Service not discovered. Unable to send data");
-        }
-    }
-
-    @Override
-    public void onConnecting() {
-        Log.d(TAG, "onConnecting");
-    }
-
-    @Override
-    public void onConnected() {
-        Log.d(TAG, "onConnected");
-    }
-
-    @Override
-    public void onDisconnected() {
-        Log.d(TAG, "onDisconnected");
-        ankletState = ANKLET_STATE.DISCONNECTED;
-    }
-
-    @Override
-    public void onServicesDiscovered() {
-        Log.d(TAG, "onServicesDiscovered");
-        mUartService = mBleManager.getGattService(UUID_SERVICE);
-        enableRxNotifications();
-        sendHandshake();
-    }
-
-    protected void enableRxNotifications() {
-        isRxNotificationEnabled = true;
-        mBleManager.enableNotification(mUartService, UUID_RX, true);
-    }
-
-    @Override
-    public synchronized void onDataAvailable(BluetoothGattCharacteristic characteristic) {
-
-        if (characteristic.getService().getUuid().toString().equalsIgnoreCase(UUID_SERVICE)) {
-            if (characteristic.getUuid().toString().equalsIgnoreCase(UUID_RX)) {
-
-                Log.d(TAG, "RX data");
-
-                final byte[] bytes = characteristic.getValue();
-                processMessage(bytes);
-            }
+            Log.d(TAG, "onServicesDiscovered GATT failure");
         }
 
     }
 
-    @Override
-    public void onDataAvailable(BluetoothGattDescriptor descriptor) {
+    /**
+     * Enable Notification on TX characteristic
+     *
+     * @return true if attempt successful
+     */
+    public boolean enableTXNotification() {
 
+        BluetoothGattService RxService = bluetoothGatt.getService(RX_SERVICE_UUID);
+        if (RxService == null) {
+            showMessage("Rx services not found!");
+            return false;
+        }
+        BluetoothGattCharacteristic TxChar = RxService.getCharacteristic(TX_CHAR_UUID);
+        if (TxChar == null) {
+            showMessage("Tx characteristics not found!");
+            return false;
+        }
+        bluetoothGatt.setCharacteristicNotification(TxChar, true);
+
+        BluetoothGattDescriptor descriptor = TxChar.getDescriptor(CCCD);
+        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        bluetoothGatt.writeDescriptor(descriptor);
+        return true;
     }
 
     @Override
-    public void onReadRemoteRssi(int rssi) {
+    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        Log.d(TAG, "onCharacteristicChanged");
 
+        byte[] data = characteristic.getValue();
+        processMessage(data);
+    }
+
+    @Override
+    public void onDescriptorWrite(BluetoothGatt gatt,BluetoothGattDescriptor descriptor, int status){
+        Log.d(TAG, "onDescriptorWrite");
+        if(status == BluetoothGatt.GATT_SUCCESS){
+            //sendHandshake();
+        }
     }
 
     public void shutDown(){
-        mBleManager.disconnect();
-        mBleManager = null;
+        bluetoothGatt.disconnect();
+        bluetoothGatt.close();
     }
     /**********************************************************************************************/
 
@@ -237,30 +244,6 @@ public class Anklet implements BleManager.BleManagerListener{
 
                 listener.onStrideMessage(anklet_id);
                 processStep(data);
-                break;
-
-            case EVENT:
-
-                if (data[1] == HEEL_DOWN)
-                    listener.onHeelDown(anklet_id);
-
-                if (data[1]== LIFT_OFF)
-                    listener.onLiftOff(anklet_id);
-                break;
-
-            case STATUS:
-
-                if (data[1] == READY) {
-                    Log.d(TAG, "ready message");
-                    ankletState = ANKLET_STATE.READY;
-                    listener.onAnkletReady(anklet_id);
-                }
-
-                if (data[1] == RUNNING){
-                    Log.d(TAG, "running message");
-                    ankletState = ANKLET_STATE.RUNNING;
-                }
-
                 break;
 
             default:

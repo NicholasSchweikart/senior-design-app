@@ -1,8 +1,6 @@
 package edu.mtu.team9.aspirus;
 
-import android.app.Activity;
 import android.app.DialogFragment;
-import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,73 +19,66 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
-import android.widget.Toast;
+import android.widget.TextView;
 import java.util.TimerTask;
 
 public class LiveSessionActivity extends AppCompatActivity implements ReconnectFragment.NoticeDialogListener {
 
     public static final String TAG = "Live-Session";
-    private static final int REQUEST_ENABLE_BT = 2;
-    private Toolbar toolbar;
+
     private GaitService gaitService;
-    private BluetoothAdapter bluetoothAdapter = null;
+
     private Handler handler;
 
     // UI components
     private Button startButton, pauseButton, endButton;
     private Chronometer chronometer;
     private View layoutWaitScreen, layoutReadyScreen;
+    private TextView stepsLeftT, stepsRightT;
+    private Integer stepsLeft=0, stepsRight =0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_live_session);
-        toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (!bluetoothAdapter.isEnabled()) {
-            Log.d(TAG, "Enabling bluetooth");
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }
+
 
         // Start a timer to restart everything if we dont connect within 5 seconds
         handler = new Handler();
         //handler.postDelayed(connectionCheck,20000);
 
-        layoutWaitScreen =  findViewById(R.id.layoutWaitScreen);
-        layoutReadyScreen = findViewById(R.id.layoutReadyScreen);
+        layoutWaitScreen =  findViewById(R.id.layoutConnectingScreen);
+        layoutReadyScreen = findViewById(R.id.layoutLiveScreen);
 
         // Get access to all the buttons
         startButton = (Button) findViewById(R.id.start_button);
-        endButton = (Button) findViewById(R.id.end_button);
         pauseButton = (Button) findViewById(R.id.pause_button);
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "start button click");
 
-                gaitService.startSystem();
-                chronometer.setBase(SystemClock.elapsedRealtime());
-                chronometer.start();
+                if(gaitService.isSERVICE_RUNNING()){
+                    Log.d(TAG, "done button click");
 
-                final String text = "RUNNING";
-                startButton.setText(text);
-                startButton.setEnabled(false);
-            }
-        });
+                    gaitService.stopSystem();
+                    chronometer.stop();
+                    startSessionReview();
+                }else{
+                    Log.d(TAG, "start button click");
 
-        endButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "end button click");
+                    gaitService.startSystem();
+                    chronometer.setBase(SystemClock.elapsedRealtime());
+                    chronometer.start();
 
-                gaitService.stopSystem();
-                chronometer.stop();
+                    final String text = "DONE";
+                    startButton.setText(text);
+                }
             }
         });
 
@@ -95,13 +86,14 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "pause button click");
-
                 gaitService.pauseSystem();
-                chronometer.stop();
             }
         });
 
         chronometer = (Chronometer) findViewById(R.id.chronometer);
+
+        stepsLeftT = (TextView) findViewById(R.id.steps_left );
+        stepsRightT = (TextView) findViewById(R.id.steps_right );
     }
 
     @Override
@@ -123,9 +115,9 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
 
     @Override
     protected void onStop() {
-        Log.d(TAG, "onStop");
         super.onStop();
 
+        Log.d(TAG, "onStop");
         try {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(gaitReciever);
         } catch (Exception ignore) {
@@ -134,7 +126,7 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
         unbindService(gaitServiceConnection);
         gaitService.stopSelf();
         gaitService = null;
-
+        finish();
     }
 
     @Override
@@ -152,7 +144,11 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
 
     public void startSessionReview()
     {
-        startActivity(new Intent(this, SessionReviewActivity.class));
+        Intent reviewIntent = new Intent(this, SessionReviewActivity.class);
+        reviewIntent.putExtra("LEFT_SUMMARY", gaitService.getTimeArrayLeft());
+        reviewIntent.putExtra("RIGHT_SUMMARY", gaitService.getTimeArrayRight());
+
+        startActivity(reviewIntent);
     }
 
     private ServiceConnection gaitServiceConnection = new ServiceConnection() {
@@ -169,26 +165,7 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
         }
     };
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
 
-            case REQUEST_ENABLE_BT:
-                // When the request to enable Bluetooth returns
-                if (resultCode == Activity.RESULT_OK) {
-                    Toast.makeText(this, "Bluetooth has turned on ", Toast.LENGTH_SHORT).show();
-                } else {
-                    // User did not enable Bluetooth or an error occurred
-                    Log.d(TAG, "BT not enabled");
-                    Toast.makeText(this, "Problem in BT Turning ON ", Toast.LENGTH_SHORT).show();
-                    //finish();
-                }
-                break;
-            default:
-                Log.e(TAG, "wrong request code");
-                break;
-        }
-    }
 
     private IntentFilter makeGaitIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
@@ -215,13 +192,15 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
             //*********************//
             if (action.equals(GaitService.ACTION_STEP_MESSAGEL)){
                 Log.d(TAG, "Left anklet step detection");
-
+                stepsLeft += 1;
+                stepsLeftT.setText(stepsLeft.toString());
             }
             //*********************//
             if (action.equals(GaitService.ACTION_STEP_MESSAGER)) {
 
                 Log.d(TAG, "Right anklet step detection");
-
+                stepsRight += 1;
+                stepsRightT.setText(stepsRight.toString());
             }
         }
     };
