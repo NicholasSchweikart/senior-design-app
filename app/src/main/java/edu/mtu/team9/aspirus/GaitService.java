@@ -19,8 +19,8 @@ public class GaitService extends Service {
     private final IBinder myBinder = new MyLocalBinder();
     private static final String LEFT_ANKLET_ADDRESS = "C3:02:46:89:C4:DC";
     private static final String RIGHT_ANKLET_ADDRESS = "E2:6D:EE:37:74:1E";
-    public Anklet leftAnklet;
-    public Anklet rightAnklet;
+    public BleAnklet leftAnklet;
+    public BleAnklet rightAnklet;
     public boolean SERVICE_READY = false;
     private boolean SERVICE_RUNNING = false;
     private BluetoothManager mBluetoothManager;
@@ -38,8 +38,8 @@ public class GaitService extends Service {
             }
         }
 
-        leftAnklet = new Anklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
-        rightAnklet = new Anklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
+        leftAnklet = new BleAnklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
+        rightAnklet = new BleAnklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
         leftAnklet.setAnkletListener(ankletListener);
         rightAnklet.setAnkletListener(ankletListener);
         rightAnklet.connect();
@@ -74,7 +74,7 @@ public class GaitService extends Service {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    public Anklet.AnkletListener ankletListener = new Anklet.AnkletListener() {
+    public BleAnklet.AnkletListener ankletListener = new BleAnklet.AnkletListener() {
         @Override
         public void onStrideMessage(char id) {
             Log.d(TAG, "onStrideMessage: " + id);
@@ -82,12 +82,6 @@ public class GaitService extends Service {
                 broadcastUpdate(ACTION_STEP_MESSAGEL);
             if(id == 'R')
                 broadcastUpdate(ACTION_STEP_MESSAGER);
-        }
-
-        @Override
-        public void onHeelDown(char anklet_id) {
-            Log.d(TAG, "onHeelDown: " + anklet_id);
-
         }
 
         @Override
@@ -105,18 +99,14 @@ public class GaitService extends Service {
             }
         }
 
-        @Override
-        public void onLiftOff(char anklet_id) {
-            Log.d(TAG, "onLiftOff: " + anklet_id);
 
-        }
     };
 
     public void startSystem(){
 
         SERVICE_RUNNING = true;
         rightAnklet.connect();
-        leftAnklet.connect();
+        //leftAnklet.connect();
     }
 
     public void pauseSystem() {
