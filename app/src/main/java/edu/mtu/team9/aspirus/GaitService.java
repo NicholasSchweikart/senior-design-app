@@ -80,7 +80,7 @@ public class GaitService extends Service {
         public void onAnkletReady(char anklet_id) {
             Log.d(TAG, "onAnkletReady: " + anklet_id);
 
-            if(rightAnklet.isReady() && leftAnklet.isReady()){
+            if(true){
                 if(!SERVICE_READY){
                     Log.d(TAG, "System is ready to go, altering UI thread...");
                     broadcastUpdate(ACTION_ANKLETS_READY);
@@ -112,14 +112,14 @@ public class GaitService extends Service {
         return this.SERVICE_RUNNING;
     }
 
-    public int[] getTimeArrayLeft()
-    {
-        return leftAnklet.getTimeArray();
-    }
-    public int[] getTimeArrayRight()
-    {
-        return rightAnklet.getTimeArray();
-    }
+//    public int[] getTimeArrayLeft()
+//    {
+//        return leftAnklet.getTimeArray();
+//    }
+//    public int[] getTimeArrayRight()
+//    {
+//        return rightAnklet.getTimeArray();
+//    }
 }
 
 

@@ -145,8 +145,8 @@ public class LiveSessionActivity extends AppCompatActivity implements ReconnectF
     public void startSessionReview()
     {
         Intent reviewIntent = new Intent(this, SessionReviewActivity.class);
-        reviewIntent.putExtra("LEFT_SUMMARY", gaitService.getTimeArrayLeft());
-        reviewIntent.putExtra("RIGHT_SUMMARY", gaitService.getTimeArrayRight());
+//        reviewIntent.putExtra("LEFT_SUMMARY", gaitService.getTimeArrayLeft());
+//        reviewIntent.putExtra("RIGHT_SUMMARY", gaitService.getTimeArrayRight());
 
         startActivity(reviewIntent);
     }
