@@ -19,8 +19,7 @@ public class GaitService extends Service {
     private final IBinder myBinder = new MyLocalBinder();
     private static final String LEFT_ANKLET_ADDRESS = "C3:02:46:89:C4:DC";
     private static final String RIGHT_ANKLET_ADDRESS = "E2:6D:EE:37:74:1E";
-    public BleAnklet leftAnklet;
-    public BleAnklet rightAnklet;
+
     public boolean SERVICE_READY = false;
     private boolean SERVICE_RUNNING = false;
     private BluetoothManager mBluetoothManager;
@@ -38,12 +37,6 @@ public class GaitService extends Service {
             }
         }
 
-        leftAnklet = new BleAnklet(LEFT_ANKLET_ADDRESS, 'L', getApplicationContext());
-        rightAnklet = new BleAnklet(RIGHT_ANKLET_ADDRESS, 'R', getApplicationContext());
-        leftAnklet.setAnkletListener(ankletListener);
-        rightAnklet.setAnkletListener(ankletListener);
-        rightAnklet.connect();
-        leftAnklet.connect();
 
     }
 
@@ -52,8 +45,7 @@ public class GaitService extends Service {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
 
-        leftAnklet = null;
-        rightAnklet = null;
+
         this.stopSelf();
     }
 
@@ -105,8 +97,7 @@ public class GaitService extends Service {
     public void startSystem(){
 
         SERVICE_RUNNING = true;
-        rightAnklet.connect();
-        //leftAnklet.connect();
+
     }
 
     public void pauseSystem() {
@@ -114,10 +105,6 @@ public class GaitService extends Service {
     }
 
     public void stopSystem(){
-
-        // Stop both the anklets
-        leftAnklet.shutDown();
-        rightAnklet.shutDown();
 
     }
 
