@@ -16,14 +16,11 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/tool_bar"
         android:id="@+id/content_frame">
-        <include
-            android:id="@+id/layoutConnectingScreen"
-            layout="@layout/connecting_screen"
-        />
+
         <include
             android:id="@+id/layoutLiveScreen"
             layout="@layout/live_screen"
-            android:visibility="gone"
+            android:visibility="visible"
             />
     </FrameLayout>
 

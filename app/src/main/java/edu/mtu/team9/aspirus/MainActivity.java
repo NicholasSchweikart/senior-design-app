@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
     private BluetoothAdapter bluetoothAdapter = null;
 
     Handler handler = new Handler();
-    OrientationEngine a;
+    GyroSensor a;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

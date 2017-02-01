@@ -2,67 +2,97 @@ package edu.mtu.team9.aspirus;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothSocket;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 /**
  * Created for Aspirus2
- * By: nicholas on 1/29/17.
- * Description:
+ * By: nssch on 10/30/2016.
+ * Description: This class builds an API and object layer around the wireless 'Anklets' for the
+ * gait project. The following class handles all Bluetooth Comm. as well as the recording of
+ * various gait metrics.
  */
 
-public class BluetoothAnklet implements ConnectedThread.ConnectionListener{
-    static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    public static final String TAG = "Bluetooth Anklet";
-    private final BluetoothSocket socket;
-    BluetoothAdapter mBluetoothAdapter;
-    private ConnectedThread connectedThread;
-    private boolean READY_FLAG = false;
-    private int totalTime, totalSteps;
+public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
 
-    public BluetoothAnklet(Context context, String address) {
+    private final char ankletID;
+    private final String deviceAddress;
+    private String TAG;
+    private BluetoothDevice device;
+    private BluetoothService bluetoothService;
+    private AnkletListener listener;
+    private boolean STATUS;
 
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+    public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter) {
 
-        BluetoothSocket tmp = null;
-        try {
-            tmp = device.createRfcommSocketToServiceRecord(myUUID);
-        } catch (IOException e) { }
-        socket =tmp;
-        mBluetoothAdapter.cancelDiscovery();
-        connectedThread = new ConnectedThread(socket);
-        connectedThread.start();
-        READY_FLAG = true;
+        this.listener = null;
+        this.deviceAddress = deviceAddress;
+        TAG = "BluetoothAnklet-" + ankletID;
+        this.ankletID = ankletID;
+        device = adapter.getRemoteDevice(deviceAddress);
+        bluetoothService = new BluetoothService(device, this);
+        bluetoothService.connect();
     }
 
-    public boolean isReady()
-    {
-        return READY_FLAG;
-    }
-    public int[] getTimeArray(){
-        int[] out = new int[5];
-        out[0] = totalTime;
-        out[1] = totalSteps;
-        return out;
-    }
     @Override
-    public void onData(byte[] data, int numbytes) {
-        try {
-            String out = new String(data, "US-ASCII");
-            Log.d(TAG, "Recieved: "+out);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+    public void onStateChange(int state) {
+        Log.d(TAG, "onStateChange()");
+        switch (state){
+            case AnkletConnection.CONNECTED:
+                listener.onAnkletReady(ankletID);
+                STATUS = true;
+                break;
+            case AnkletConnection.CONNECTION_FAILED:
+                listener.onAnkletFailure(ankletID);
+                break;
+            case AnkletConnection.CONNECTION_LOST:
+
+                break;
+            default:
+                break;
         }
     }
+
+    @Override
+    public void onDataRecieved(String data) {
+        Log.d(TAG, "onDataRecieved()");
+    }
+
+    public interface AnkletListener {
+
+        void onAnkletReady(char ankletID);
+        void onAnkletFailure(char ankletID);
+    }
+
+    public void setAnkletListener(AnkletListener listener) {
+        this.listener = listener;
+    }
+
+    public boolean isReady(){
+        return STATUS;
+    }
+
+    public void shutdown()
+    {
+        bluetoothService.stop();
+    }
+
+
+
+    /***********************************************************************************************
+     * Message Processing Section
+     **********************************************************************************************/
+
+
 }
