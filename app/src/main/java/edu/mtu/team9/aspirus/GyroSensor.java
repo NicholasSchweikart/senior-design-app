@@ -114,7 +114,7 @@ public class GyroSensor implements Runnable, SensorEventListener {
 
         // Step 2 is to filter for a trendelenburg spike
         if(zRad > .08){
-            if((System.currentTimeMillis()-issueTime) > 500){
+            if((System.currentTimeMillis()-issueTime) > 1000){
                 toneGen1.startTone(ToneGenerator.TONE_CDMA_ABBR_ALERT,100);
                 hapticEngine.vibrate(100);
                 listener.onTrendelenburgSpike();

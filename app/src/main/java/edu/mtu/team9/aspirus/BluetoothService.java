@@ -203,7 +203,6 @@ public class BluetoothService {
                     readMessage.append(read);
 
                     if (read.contains("\n")) {
-                         Log.d(TAG, "Data in buffer");
                         listener.onDataRecieved(readMessage.toString());
                         readMessage.setLength(0);
                     }

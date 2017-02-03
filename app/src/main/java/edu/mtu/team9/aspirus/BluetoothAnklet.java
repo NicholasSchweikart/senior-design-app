@@ -33,10 +33,10 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
     private BluetoothService bluetoothService;
     private AnkletListener listener;
     private boolean STATUS;
+    public String accel = "0,0,0";
+    public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter, AnkletListener listener) {
 
-    public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter) {
-
-        this.listener = null;
+        this.listener = listener;
         this.deviceAddress = deviceAddress;
         TAG = "BluetoothAnklet-" + ankletID;
         this.ankletID = ankletID;
@@ -66,7 +66,7 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
 
     @Override
     public void onDataRecieved(String data) {
-        Log.d(TAG, "onDataRecieved()");
+        accel = data.substring(0,data.length()-2);
     }
 
     public interface AnkletListener {
@@ -87,7 +87,6 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
     {
         bluetoothService.stop();
     }
-
 
 
     /***********************************************************************************************

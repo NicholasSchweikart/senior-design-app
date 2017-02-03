@@ -1,5 +1,7 @@
 package edu.mtu.team9.aspirus;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,7 +24,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class LoggingActivity extends AppCompatActivity implements SensorEventListener {
+public class LoggingActivity extends AppCompatActivity implements SensorEventListener,BluetoothAnklet.AnkletListener {
 
     public static final String TAG = "logging-main:";
 
@@ -40,6 +42,10 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
     public float[] accelerationVector = new float[3];   // accelerometer vector x,y,z m/s^2
     public float[] gyroVector = new float[3];           // gyro vector x,y,z rad/s
 
+    private BluetoothAnklet leftAnklet, rightAnklet;
+    private static final String LEFT_ANKLET_ADDRESS = "98:D3:34:90:DC:D0";
+    private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
+
     String myDir;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +57,11 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
         gyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
+
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
+        leftAnklet = new BluetoothAnklet(LEFT_ANKLET_ADDRESS, 'L', mBluetoothAdapter, this);
+        rightAnklet = new BluetoothAnklet(RIGHT_ANKLET_ADDRESS,'R',mBluetoothAdapter, this);
 
         final EditText filename_etxt = (EditText) findViewById(R.id.edittxt_filename);
         xtxt = (TextView) findViewById(R.id.x_text);
@@ -80,17 +91,16 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
                     startBtn.setText("Done");
                     STATE_LOGGING = true;
                 }else{
-                    shutdown();
+                    reset();
                     STATE_LOGGING = false;
                     startBtn.setText("Start");
                 }
             }
         });
     }
-    private void shutdown(){
+    private void reset() {
         fuseTimer.cancel();
         fuseTimer.purge();
-        mSensorManager.unregisterListener(this);
         try {
             fileOutputStream.flush();
             fileOutputStream.close();
@@ -99,11 +109,22 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
             e.printStackTrace();
         }
     }
+    private void shutdown(){
+        fuseTimer.cancel();
+        fuseTimer.purge();
+        mSensorManager.unregisterListener(this);
+        leftAnklet.shutdown();
+        rightAnklet.shutdown();
+        leftAnklet = null;
+        rightAnklet = null;
+
+    }
     @Override
     protected  void onStop(){
         super.onStop();
         mSensorManager.unregisterListener(this);
-       finish();
+        shutdown();
+        finish();
     }
 
 
@@ -117,18 +138,10 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
             final String xGyro = String.valueOf(gyroVector[0]);
             final String yGyro = String.valueOf(gyroVector[1]);
             final String zGyro = String.valueOf(gyroVector[2]);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    xtxt.setText(xAccel);
-                    ytxt.setText(yAccel);
-                    ztxt.setText(zAccel);
-
-                }
-            });
 
             String out = String.valueOf(System.currentTimeMillis()) +','+ xAccel +','+ yAccel +','
-                    + zAccel + ',' + xGyro + ',' + yGyro + ',' + zGyro +'\n';
+                    + zAccel + ',' + xGyro + ',' + yGyro + ',' + zGyro + leftAnklet.accel + ','+
+                    rightAnklet.accel + '\n';
             try{
                 fileOutputStream.write(out.getBytes());
             } catch (IOException e) {
@@ -155,6 +168,16 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    @Override
+    public void onAnkletReady(char ankletID) {
+
+    }
+
+    @Override
+    public void onAnkletFailure(char ankletID) {
 
     }
 }
