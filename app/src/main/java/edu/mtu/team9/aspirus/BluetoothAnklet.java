@@ -2,19 +2,9 @@ package edu.mtu.team9.aspirus;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 import android.util.Log;
-
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * Created for Aspirus2
@@ -24,23 +14,23 @@ import java.util.UUID;
  * various gait metrics.
  */
 
-public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
+public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
 
     private final char ankletID;
     private final String deviceAddress;
     private String TAG;
-    private BluetoothDevice device;
-    private BluetoothService bluetoothService;
+    public BluetoothService bluetoothService;
     private AnkletListener listener;
     private boolean STATUS;
-    public String accel = "0,0,0";
+    private FileOutputStream loggingOutputStream;
+
     public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter, AnkletListener listener) {
 
         this.listener = listener;
         this.deviceAddress = deviceAddress;
         TAG = "BluetoothAnklet-" + ankletID;
         this.ankletID = ankletID;
-        device = adapter.getRemoteDevice(deviceAddress);
+        BluetoothDevice device = adapter.getRemoteDevice(deviceAddress);
         bluetoothService = new BluetoothService(device, this);
         bluetoothService.connect();
     }
@@ -48,7 +38,7 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
     @Override
     public void onStateChange(int state) {
         Log.d(TAG, "onStateChange()");
-        switch (state){
+        switch (state) {
             case AnkletConnection.CONNECTED:
                 listener.onAnkletReady(ankletID);
                 STATUS = true;
@@ -57,7 +47,7 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
                 listener.onAnkletFailure(ankletID);
                 break;
             case AnkletConnection.CONNECTION_LOST:
-
+                //TODO implement autoreconnect feature
                 break;
             default:
                 break;
@@ -65,33 +55,62 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener{
     }
 
     @Override
-    public void onDataRecieved(String data) {
-        accel = data.substring(0,data.length()-2);
+    public void onDataRecieved(byte[] data) {
+
     }
 
     public interface AnkletListener {
 
         void onAnkletReady(char ankletID);
+
         void onAnkletFailure(char ankletID);
     }
 
-    public void setAnkletListener(AnkletListener listener) {
-        this.listener = listener;
-    }
-
-    public boolean isReady(){
+    /***********************************************************************************************
+     * Class Control Methods
+     **********************************************************************************************/
+    public boolean isReady() {
         return STATUS;
     }
 
-    public void shutdown()
-    {
+    public void shutdown() {
         bluetoothService.stop();
     }
 
+    public void enableFileLogging(File loggingOutputFile) {
+        Log.d(TAG, "Enabling file logging in bluetooth service");
+
+        try {
+            this.loggingOutputStream = new FileOutputStream(loggingOutputFile);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        bluetoothService.setLoggingEnabled(loggingOutputStream);
+    }
 
     /***********************************************************************************************
-     * Message Processing Section
+     * Anklet Command Methods
      **********************************************************************************************/
+    public void sendStart() {
+        Log.d(TAG, "Sending start message >>>");
 
+        byte[] startMessage = {'s'};
+        bluetoothService.write(startMessage);
+    }
+
+    public void enableCSVoutput() {
+        Log.d(TAG, "Sending enable CSV message >>>");
+
+        byte[] csvEnableMessage = {'e'};
+        bluetoothService.write(csvEnableMessage);
+    }
+
+    public void sendStop() {
+        Log.d(TAG, "Sending stop message >>>");
+
+        byte[] stopMessage = {'x'};
+        bluetoothService.write(stopMessage);
+    }
 
 }

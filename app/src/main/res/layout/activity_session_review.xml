@@ -63,37 +63,6 @@
                 app:centerColor="@color/colorAccent"
                 />
 
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/step_counter"
-                    android:gravity="center"
-                    android:elevation="1dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Steps"
-                        android:textAppearance="@android:style/TextAppearance.Material.Display1" />
-
-                    <TextView
-                        android:text="xx"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/textView3"
-                        android:textAppearance="@android:style/TextAppearance.Material.Display1"
-                        android:textAlignment="center"
-                        android:textSize="34sp"
-                        android:fontFamily="sans-serif" />
-                </LinearLayout>
-
-            </LinearLayout>
-
             <Button
                 android:text="Done"
                 android:layout_width="match_parent"

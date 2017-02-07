@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,7 +25,8 @@ public class BluetoothService {
     private BluetoothLinkListener listener;
     private ConnectThread connectThread;
     private ConnectedThread connectedThread;
-
+    private FileOutputStream loggingOutStream;
+    private boolean loggingEnabled = false;
     public BluetoothService(BluetoothDevice device, BluetoothLinkListener listener) {
         this.listener = listener;
         myDevice = device;
@@ -32,7 +34,7 @@ public class BluetoothService {
 
     public interface BluetoothLinkListener{
         void onStateChange(int state);
-        void onDataRecieved(String data);
+        void onDataRecieved(byte[] data);
     }
 
     public synchronized void connect() {
@@ -43,9 +45,23 @@ public class BluetoothService {
         connectThread.start();
     }
 
+    public void setLoggingEnabled(FileOutputStream outputStream){
+        this.loggingOutStream = outputStream;
+        loggingEnabled = true;
+    }
+
     public synchronized void stop() {
         cancelConnectThread();
         cancelConnectedThread();
+        if(loggingEnabled){
+            try {
+                loggingOutStream.flush();
+                loggingOutStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            loggingEnabled = false;
+        }
     }
 
     public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
@@ -189,8 +205,8 @@ public class BluetoothService {
 
         public void run() {
             Log.i(TAG, "Begin connectedThread");
-            byte[] buffer = new byte[1024];  // buffer store for the stream
-            int bytes; // bytes returned from read()
+            byte[] buffer = new byte[512];  // buffer store for the stream
+            int bytesRead = 0, offset = 0;
 
             StringBuilder readMessage = new StringBuilder();
 
@@ -198,13 +214,9 @@ public class BluetoothService {
             while (true) {
                 try {
 
-                    bytes = mmInStream.read(buffer);
-                    String read = new String(buffer, 0, bytes);
-                    readMessage.append(read);
-
-                    if (read.contains("\n")) {
-                        listener.onDataRecieved(readMessage.toString());
-                        readMessage.setLength(0);
+                    bytesRead = mmInStream.read(buffer, 0, 50);
+                    if(loggingEnabled){
+                        loggingOutStream.write(buffer,0,bytesRead);
                     }
 
                 } catch (IOException e) {

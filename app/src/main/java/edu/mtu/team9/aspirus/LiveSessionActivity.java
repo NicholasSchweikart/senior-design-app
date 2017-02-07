@@ -1,7 +1,6 @@
 package edu.mtu.team9.aspirus;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,28 +12,29 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
-import android.widget.TextView;
 
-public class LiveSessionActivity extends AppCompatActivity implements GyroSensor.GyroEventListener,BluetoothAnklet.AnkletListener {
+public class LiveSessionActivity extends AppCompatActivity implements TrendelenburgDetector.TrendelenburgEventListener,BluetoothAnklet.AnkletListener {
 
 
     public static final String TAG = "Live-Session";
     private static final String LEFT_ANKLET_ADDRESS = "98:D3:34:90:DC:D0";
     private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
-    /**********************************************************************************************/
+
     // UI Components
-    private Button startButton, pauseButton, endButton;
+    private Button startButton, pauseButton;
     private Chronometer chronometer;
     private View layoutWaitScreen, layoutReadyScreen;
-    private TextView stepsLeftT, stepsRightT;
-    /*********************************************************************************************/
+
     // System Components
-    private Integer stepsLeft=0, stepsRight =0;
-    private boolean SYSTEM_RUNNING = false;
-    Thread accelerationThread;
-    private GyroSensor gyroSensor;
+    private TrendelenburgDetector trendelenburgDetector;
     private BluetoothAnklet leftAnklet, rightAnklet;
 
+    // Control Variables
+    private boolean SYSTEM_RUNNING = false;
+
+    /***********************************************************************************************
+     * Activity Functions
+     **********************************************************************************************/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,20 +42,19 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
         setContentView(R.layout.activity_live_session);
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        gyroSensor = new GyroSensor(getApplicationContext());
-        gyroSensor.setListener(this);
-        accelerationThread = new Thread(gyroSensor);
+        // Create new Trendelenburg detector for the session
+        trendelenburgDetector = new TrendelenburgDetector(getApplicationContext(), this);
 
-        // Get access to all the buttons
-        startButton = (Button) findViewById(R.id.start_button);
-        pauseButton = (Button) findViewById(R.id.pause_button);
-
+        // Build and start the anklets for the session
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
-
         // Instantiate new anklets here TODO
+
+        // Access UI Components
+        startButton = (Button) findViewById(R.id.start_button);
+        pauseButton = (Button) findViewById(R.id.pause_button);
+        chronometer =   (Chronometer) findViewById(R.id.chronometer);
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,7 +64,7 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
                     Log.d(TAG, "done button click");
 
                     chronometer.stop();
-                    gyroSensor.Shutdown();
+                    trendelenburgDetector.Shutdown();
                     startSessionReview();
                 }else{
                     Log.d(TAG, "start button click");
@@ -73,7 +72,7 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
                     SYSTEM_RUNNING = true;
                     chronometer.setBase(SystemClock.elapsedRealtime());
                     chronometer.start();
-                    accelerationThread.start();
+                    trendelenburgDetector.start();
                     final String text = "DONE";
                     startButton.setText(text);
                 }
@@ -85,20 +84,9 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
             public void onClick(View view) {
                 Log.d(TAG, "pause button click");
 
-                gyroSensor.pause();
             }
         });
 
-        chronometer =   (Chronometer) findViewById(R.id.chronometer);
-        stepsLeftT =    (TextView) findViewById(R.id.steps_left );
-        stepsRightT =   (TextView) findViewById(R.id.steps_right );
-
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart()");
     }
 
     @Override
@@ -109,10 +97,16 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart()");
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop");
-        gyroSensor.Shutdown();
+        trendelenburgDetector.Shutdown();
 
         finish();
     }
@@ -140,12 +134,6 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
     }
 
     @Override
-    public void onTrendelenburgSpike() {
-        Log.d(TAG, "Trend Spike Detected!");
-
-    }
-
-    @Override
     public void onAnkletReady(char ankletId) {
 
     }
@@ -154,4 +142,14 @@ public class LiveSessionActivity extends AppCompatActivity implements GyroSensor
     public void onAnkletFailure(char ankletID) {
 
     }
+    /***********************************************************************************************
+     * Gait Logic
+     **********************************************************************************************/
+
+    @Override
+    public void onTrendelenburgEvent() {
+        Log.d(TAG, "Trend Spike Detected!");
+
+    }
+
 }

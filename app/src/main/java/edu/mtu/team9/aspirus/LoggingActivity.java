@@ -11,11 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -28,33 +25,30 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
 
     public static final String TAG = "logging-main:";
 
-    private TextView outputTxt;
-    private TextView xtxt, ytxt, ztxt;
-    private ListView outputListView;
-    private ArrayAdapter outputAdapter;
-
+    // System Components
     private Timer fuseTimer = new Timer();
     private SensorManager mSensorManager;
-    private Sensor accelerationSensor, gyroSensor;
-    private static final int SAMPLE_RATE = 20;          // in ms => 50Hz
-    private FileOutputStream fileOutputStream;
-    private boolean STATE_LOGGING = false;
+    private FileOutputStream onboardOutputStream;
+    private BluetoothAnklet leftAnklet, rightAnklet;
     public float[] accelerationVector = new float[3];   // accelerometer vector x,y,z m/s^2
     public float[] gyroVector = new float[3];           // gyro vector x,y,z rad/s
 
-    private BluetoothAnklet leftAnklet, rightAnklet;
+    // Constants
+    private static final int SAMPLE_RATE = 20;          // in ms => 50Hz
     private static final String LEFT_ANKLET_ADDRESS = "98:D3:34:90:DC:D0";
     private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
-    String myDir;
+    // Control Variables
+    private boolean STATE_LOGGING = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_logging);
 
         mSensorManager = (SensorManager) getApplicationContext().getSystemService(SENSOR_SERVICE);
-        accelerationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        gyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        Sensor accelerationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        Sensor gyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
 
@@ -64,9 +58,6 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
         rightAnklet = new BluetoothAnklet(RIGHT_ANKLET_ADDRESS,'R',mBluetoothAdapter, this);
 
         final EditText filename_etxt = (EditText) findViewById(R.id.edittxt_filename);
-        xtxt = (TextView) findViewById(R.id.x_text);
-        ytxt = (TextView) findViewById(R.id.y_text);
-        ztxt = (TextView) findViewById(R.id.z_text);
 
         final Button startBtn = (Button) findViewById(R.id.start_btn);
 
@@ -74,19 +65,37 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
             @Override
             public void onClick(View view) {
                 if(!STATE_LOGGING){
-                    String filename =  filename_etxt.getText().toString()+".csv";
+
+                    String filePrefix = filename_etxt.getText().toString();
+                    String onboardFilename =  filePrefix + ".csv";
+                    String filenameAnkletLeft = filePrefix + "-left-anklet.csv";
+                    String filenameAnkletRight = filePrefix + "-right-anklet.csv";
+
+                    // Create the new CSV directory if it doesnt exist already.
                     File dir = new File(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),"CSVs");
                     if(!dir.exists()){
-                        Log.d(TAG, "Directory not created");
+                        Log.d(TAG, "Making new directory...");
                         dir.mkdirs();
                     }
-                    File outputCSV = new File(dir,filename);
-                    try {
-                        fileOutputStream = new FileOutputStream(outputCSV);
 
+                    // Open up three new output files for the logging.
+                    File onboardOutputFile = new File(dir,onboardFilename);
+                    File leftAnkletOutputFile = new File(dir,filenameAnkletLeft);
+                    File rightAnkletOutputFile = new File(dir, filenameAnkletRight);
+
+                    try {
+                        onboardOutputStream = new FileOutputStream(onboardOutputFile);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+
+                    leftAnklet.enableFileLogging(leftAnkletOutputFile);
+                    rightAnklet.enableFileLogging(rightAnkletOutputFile);
+                    rightAnklet.sendStart();
+                    leftAnklet.sendStart();
+                    rightAnklet.enableCSVoutput();
+                    leftAnklet.enableCSVoutput();
+
                     fuseTimer.scheduleAtFixedRate(writeToFile,1000,SAMPLE_RATE);
                     startBtn.setText("Done");
                     STATE_LOGGING = true;
@@ -101,10 +110,12 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
     private void reset() {
         fuseTimer.cancel();
         fuseTimer.purge();
+        rightAnklet.sendStop();
+        leftAnklet.sendStop();
         try {
-            fileOutputStream.flush();
-            fileOutputStream.close();
-            Toast.makeText(this, "File Saved!", Toast.LENGTH_SHORT).show();
+            onboardOutputStream.flush();
+            onboardOutputStream.close();
+            Toast.makeText(this, "Files Saved!", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -120,6 +131,18 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
 
     }
     @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart()");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy()");
+    }
+
+    @Override
     protected  void onStop(){
         super.onStop();
         mSensorManager.unregisterListener(this);
@@ -127,8 +150,22 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
         finish();
     }
 
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(TAG, "onRestart");
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
 
+    }
+
+    /**
+     *  Writes the collected data to the file.
+     */
     private TimerTask writeToFile = new TimerTask() {
         @Override
         public void run() {
@@ -140,10 +177,9 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
             final String zGyro = String.valueOf(gyroVector[2]);
 
             String out = String.valueOf(System.currentTimeMillis()) +','+ xAccel +','+ yAccel +','
-                    + zAccel + ',' + xGyro + ',' + yGyro + ',' + zGyro + leftAnklet.accel + ','+
-                    rightAnklet.accel + '\n';
+                    + zAccel + ',' + xGyro + ',' + yGyro + ',' + zGyro + '\n';
             try{
-                fileOutputStream.write(out.getBytes());
+                onboardOutputStream.write(out.getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -155,13 +191,14 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_LINEAR_ACCELERATION:
 
-                // copy new accelerometer data into accel array
+                // Copy new accelerometer data into accel array
                 System.arraycopy(sensorEvent.values, 0, accelerationVector, 0, 3);
                 break;
             case Sensor.TYPE_GYROSCOPE:
 
+                // Copy new gyro data into the gyro array
                 System.arraycopy(sensorEvent.values, 0, gyroVector, 0, 3);
-            break;
+                break;
         }
 
     }
