@@ -2,9 +2,6 @@ package edu.mtu.team9.aspirus;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import java.io.FileOutputStream;
@@ -72,7 +69,7 @@ public class BluetoothService {
         // Start the thread to manage the connection and perform transmissions
         connectedThread = new ConnectedThread(socket);
         connectedThread.start();
-        listener.onStateChange(AnkletConnection.CONNECTED);
+        listener.onStateChange(AnkletConst.CONNECTED);
     }
 
     /**
@@ -82,7 +79,7 @@ public class BluetoothService {
         Log.e(TAG, "Connection Failed");
 
         cancelConnectThread();
-        listener.onStateChange(AnkletConnection.CONNECTION_FAILED);
+        listener.onStateChange(AnkletConst.CONNECTION_FAILED);
     }
 
     /**
@@ -93,7 +90,7 @@ public class BluetoothService {
         // Send a failure item_message back to the Activity
 
         cancelConnectedThread();
-        listener.onStateChange(AnkletConnection.CONNECTION_LOST);
+        listener.onStateChange(AnkletConst.CONNECTION_LOST);
     }
 
     private void cancelConnectThread() {
@@ -205,8 +202,8 @@ public class BluetoothService {
 
         public void run() {
             Log.i(TAG, "Begin connectedThread");
-            byte[] buffer = new byte[512];  // buffer store for the stream
-            int bytesRead = 0, offset = 0;
+            byte[] buffer = new byte[16];  // buffer store for the stream
+            int bytesRead = 0;
 
             StringBuilder readMessage = new StringBuilder();
 
@@ -214,9 +211,16 @@ public class BluetoothService {
             while (true) {
                 try {
 
-                    bytesRead = mmInStream.read(buffer, 0, 50);
+                    bytesRead = mmInStream.read(buffer, 0, 16);
                     if(loggingEnabled){
                         loggingOutStream.write(buffer,0,bytesRead);
+                    }
+                    for (int i = 0; i < bytesRead; i++){
+                        if(buffer[i] == '\n'){
+                            byte[] out = new byte[i];
+                            System.arraycopy(out,0,buffer,0,i);
+                            listener.onDataRecieved(buffer);
+                        }
                     }
 
                 } catch (IOException e) {

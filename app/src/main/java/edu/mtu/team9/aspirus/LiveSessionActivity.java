@@ -49,7 +49,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         // Build and start the anklets for the session
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
-        // Instantiate new anklets here TODO
+
+        leftAnklet = new BluetoothAnklet(LEFT_ANKLET_ADDRESS, 'L', mBluetoothAdapter, this);
 
         // Access UI Components
         startButton = (Button) findViewById(R.id.start_button);
@@ -65,6 +66,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
                     chronometer.stop();
                     trendelenburgDetector.Shutdown();
+                    leftAnklet.sendStop();
+                    leftAnklet.shutdown();
                     startSessionReview();
                 }else{
                     Log.d(TAG, "start button click");
@@ -72,6 +75,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
                     SYSTEM_RUNNING = true;
                     chronometer.setBase(SystemClock.elapsedRealtime());
                     chronometer.start();
+                    leftAnklet.sendStart();
                     trendelenburgDetector.start();
                     final String text = "DONE";
                     startButton.setText(text);

@@ -15,19 +15,23 @@ import java.io.FileOutputStream;
  */
 
 public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
-
-    private final char ankletID;
-    private final String deviceAddress;
     private String TAG;
+
+    // System Components
+    private final char ankletID;
     public BluetoothService bluetoothService;
     private AnkletListener listener;
-    private boolean STATUS;
     private FileOutputStream loggingOutputStream;
+
+    // Control Variables
+    private boolean CSV_IS_ENABLED = false;
+    private int ankletState = AnkletConst.STATE_CONNECTING;
+
+    // Constants
 
     public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter, AnkletListener listener) {
 
         this.listener = listener;
-        this.deviceAddress = deviceAddress;
         TAG = "BluetoothAnklet-" + ankletID;
         this.ankletID = ankletID;
         BluetoothDevice device = adapter.getRemoteDevice(deviceAddress);
@@ -38,25 +42,24 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
     @Override
     public void onStateChange(int state) {
         Log.d(TAG, "onStateChange()");
+
         switch (state) {
-            case AnkletConnection.CONNECTED:
+            case AnkletConst.CONNECTED:
+                ankletState = AnkletConst.STATE_CONNECTED;
+
                 listener.onAnkletReady(ankletID);
-                STATUS = true;
                 break;
-            case AnkletConnection.CONNECTION_FAILED:
+            case AnkletConst.CONNECTION_FAILED:
+                ankletState = AnkletConst.STATE_CONNECTING;
                 listener.onAnkletFailure(ankletID);
                 break;
-            case AnkletConnection.CONNECTION_LOST:
+            case AnkletConst.CONNECTION_LOST:
+                ankletState = AnkletConst.STATE_CONNECTING;
                 //TODO implement autoreconnect feature
                 break;
             default:
                 break;
         }
-    }
-
-    @Override
-    public void onDataRecieved(byte[] data) {
-
     }
 
     public interface AnkletListener {
@@ -69,9 +72,6 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
     /***********************************************************************************************
      * Class Control Methods
      **********************************************************************************************/
-    public boolean isReady() {
-        return STATUS;
-    }
 
     public void shutdown() {
         bluetoothService.stop();
@@ -93,24 +93,64 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
      * Anklet Command Methods
      **********************************************************************************************/
     public void sendStart() {
-        Log.d(TAG, "Sending start message >>>");
 
-        byte[] startMessage = {'s'};
-        bluetoothService.write(startMessage);
+        if(ankletState <= AnkletConst.STATE_READY){
+            Log.d(TAG, "Sending start message >>>");
+            bluetoothService.write(AnkletConst.START_MESSAGE);
+        }else{
+            Log.e(TAG, "Cannot Send Start");
+        }
     }
 
     public void enableCSVoutput() {
-        Log.d(TAG, "Sending enable CSV message >>>");
 
-        byte[] csvEnableMessage = {'e'};
-        bluetoothService.write(csvEnableMessage);
+        if(ankletState <= AnkletConst.STATE_CONNECTED){
+            Log.d(TAG, "Sending enable CSV message >>>");
+            bluetoothService.write(AnkletConst.ENABLE_CSV_MESSAGE);
+        }else{
+            Log.e(TAG, "NO CONNECTION CANT SEND CSV ENABLE");
+        }
     }
 
     public void sendStop() {
-        Log.d(TAG, "Sending stop message >>>");
+        if(ankletState <= AnkletConst.STATE_RUNNING){
+            Log.d(TAG, "Sending stop message >>>");
+            bluetoothService.write(AnkletConst.STOP_MESSAGE);
+        }else{
+            Log.e(TAG, "NOT RUNNING CANT STOP");
+        }
+    }
 
-        byte[] stopMessage = {'x'};
-        bluetoothService.write(stopMessage);
+    /***********************************************************************************************
+     * Message Processing !!! \n triggers every onDataRecieved event
+     **********************************************************************************************/
+    @Override
+    public void onDataRecieved(byte[] data) {
+
+        // Handle state changes baised on what command responses we see
+        if(data[0] == AnkletConst.COMMAND_RESPONSE_FLAG){
+            switch (data[1]){
+                case AnkletConst.READY_FLAG:
+                    Log.d(TAG,"Ready Recieved");
+                    ankletState = AnkletConst.STATE_READY;
+                    break;
+                case AnkletConst.RUNNING_FLAG:
+                    Log.d(TAG,"Running Recieved");
+                    ankletState = AnkletConst.STATE_RUNNING;
+                    break;
+                case AnkletConst.CSV_ENABLED_FLAG:
+                    break;
+                case AnkletConst.CSV_DISABLED_FLAG:
+                    break;
+                default:
+                    break;
+            }
+        }else{  // Process as a new acceleration average!
+
+            String s = new String(data);
+            Double avgAccel = Double.valueOf(s);
+            Log.d(TAG,"New AVG: " + avgAccel.toString());
+        }
     }
 
 }
