@@ -11,14 +11,15 @@
     android:paddingTop="20dp"
     android:gravity="bottom">
 
-    <Chronometer
-        android:id="@+id/chronometer"
+    <TextView
+        android:id="@+id/countDownText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:textAppearance="@android:style/TextAppearance.Material.Display1"
         android:textColor="@android:color/white"
-        android:textSize="60sp" />
+        android:textSize="60sp"
+        android:text="5:00"/>
 
 
     <ProgressBar

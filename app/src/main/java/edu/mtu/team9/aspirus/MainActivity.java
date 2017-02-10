@@ -13,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 
@@ -37,12 +36,14 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
 
         Button newSessionBtn = (Button) findViewById(R.id.new_session_button);
         Button getHelpBtn = (Button) findViewById(R.id.get_help_button);
+        Button legalButton = (Button)findViewById(R.id.legal_button);
+        Button performanceButton = (Button)findViewById(R.id.performanceHistoryButton);
 
         newSessionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "new session clicked");
-                startNewSession();
+                startActivity(new Intent(getApplication(), LiveSessionActivity.class));
             }
         });
 
@@ -50,7 +51,23 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "get help clicked");
-                startHelp();
+                startActivity(new Intent(getApplication(), HelpActivity.class));
+            }
+        });
+
+        legalButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "legal clicked");
+                startActivity(new Intent(getApplication(), LegalActivity.class));
+            }
+        });
+
+        performanceButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "legal clicked");
+                startActivity(new Intent(getApplication(), PerformanceReviewActivity.class));
             }
         });
 
@@ -60,14 +77,6 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
-    }
-
-    public void startNewSession() {
-        startActivity(new Intent(this, LiveSessionActivity.class));
-    }
-
-    public void startHelp() {
-        startActivity(new Intent(this, SessionReviewActivity.class));
     }
 
     @Override
@@ -120,14 +129,11 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
                 showDialog();
                 return true;
 
-            case R.id.action_legal:
-                // User chose the "Settings" item, show the app settings UI...
-                startActivity(new Intent(this, LegalActivity.class));
-                return true;
             case R.id.action_logging:
                 // User chose the "Settings" item, show the app settings UI...
                 startActivity(new Intent(this, LoggingActivity.class));
                 return true;
+
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.

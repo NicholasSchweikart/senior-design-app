@@ -26,12 +26,16 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
     // Control Variables
     private boolean CSV_IS_ENABLED = false;
     private int ankletState = AnkletConst.STATE_CONNECTING;
+    private boolean ACTIVE = false;
 
     // Constants
+    private Double accelerationSum;
+    private int accelerationsLogged = 0;
 
     public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter, AnkletListener listener) {
 
         this.listener = listener;
+        accelerationSum = 0.0;
         TAG = "BluetoothAnklet-" + ankletID;
         this.ankletID = ankletID;
         BluetoothDevice device = adapter.getRemoteDevice(deviceAddress);
@@ -89,12 +93,18 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
         bluetoothService.setLoggingEnabled(loggingOutputStream);
     }
 
+    public Double getAvgAcceleration(){
+        Double out = accelerationSum/accelerationsLogged;
+        accelerationSum = 0.0;
+        accelerationsLogged = 0;
+        return out;
+    }
     /***********************************************************************************************
      * Anklet Command Methods
      **********************************************************************************************/
     public void sendStart() {
 
-        if(ankletState <= AnkletConst.STATE_READY){
+        if(ankletState <= AnkletConst.STATE_CONNECTED){
             Log.d(TAG, "Sending start message >>>");
             bluetoothService.write(AnkletConst.START_MESSAGE);
         }else{
@@ -121,36 +131,31 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
         }
     }
 
+    public void activate(){
+        ACTIVE = true;
+    }
+
+    public void deActivate(){
+        ACTIVE = false;
+    }
     /***********************************************************************************************
      * Message Processing !!! \n triggers every onDataRecieved event
      **********************************************************************************************/
     @Override
     public void onDataRecieved(byte[] data) {
 
-        // Handle state changes baised on what command responses we see
-        if(data[0] == AnkletConst.COMMAND_RESPONSE_FLAG){
-            switch (data[1]){
-                case AnkletConst.READY_FLAG:
-                    Log.d(TAG,"Ready Recieved");
-                    ankletState = AnkletConst.STATE_READY;
-                    break;
-                case AnkletConst.RUNNING_FLAG:
-                    Log.d(TAG,"Running Recieved");
-                    ankletState = AnkletConst.STATE_RUNNING;
-                    break;
-                case AnkletConst.CSV_ENABLED_FLAG:
-                    break;
-                case AnkletConst.CSV_DISABLED_FLAG:
-                    break;
-                default:
-                    break;
-            }
-        }else{  // Process as a new acceleration average!
+        if(!ACTIVE)
+            return;
 
-            String s = new String(data);
-            Double avgAccel = Double.valueOf(s);
-            Log.d(TAG,"New AVG: " + avgAccel.toString());
+        String s = new String(data);
+        try{
+            accelerationSum += Double.valueOf(s);
+            accelerationsLogged += 1;
+            Log.d(TAG,"New AVG: " + accelerationSum.toString());
+        }catch (Exception e){
+            Log.d(TAG,"New AVG: bad Value");
         }
+
     }
 
 }

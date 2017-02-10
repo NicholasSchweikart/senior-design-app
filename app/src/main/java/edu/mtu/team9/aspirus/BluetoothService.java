@@ -218,8 +218,9 @@ public class BluetoothService {
                     for (int i = 0; i < bytesRead; i++){
                         if(buffer[i] == '\n'){
                             byte[] out = new byte[i];
-                            System.arraycopy(out,0,buffer,0,i);
-                            listener.onDataRecieved(buffer);
+                            System.arraycopy(buffer,0,out,0,i);
+                            listener.onDataRecieved(out);
+                            break;
                         }
                     }
 

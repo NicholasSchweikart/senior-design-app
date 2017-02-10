@@ -22,8 +22,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp
-            "
+            android:layout_height="0dp"
             android:layout_weight=".25"
             android:background="@android:color/transparent"
             android:layout_marginBottom="2dp">
@@ -55,13 +54,13 @@
                 android:textAppearance="@style/TextAppearance.AppCompat"
                 android:drawableLeft="@drawable/ic_trending_up_white_24px"
                 android:textAlignment="center"
-                android:textSize="24sp" />
+                android:textSize="24sp"
+                android:id="@+id/performanceHistoryButton" />
         </FrameLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp
-            "
+            android:layout_height="0dp"
             android:layout_weight=".25"
             android:background="@android:color/transparent"
             android:layout_marginBottom="2dp">
@@ -92,7 +91,8 @@
                 android:text="Legal"
                 android:textAppearance="@style/TextAppearance.AppCompat"
                 android:drawableStart="@drawable/ic_info_outline_white_24px"
-                android:textSize="24sp" />
+                android:textSize="24sp"
+                android:id="@+id/legal_button" />
         </FrameLayout>
     </LinearLayout>
 

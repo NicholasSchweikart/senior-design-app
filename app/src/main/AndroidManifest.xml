@@ -5,7 +5,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -68,11 +70,19 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="edu.mtu.team9.aspirus.MainActivity" />
         </activity>
-
         <activity android:name=".LoggingActivity">
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".PerformanceReviewActivity"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="Performance Review">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="edu.mtu.team9.aspirus.MainActivity" />
         </activity>
     </application>
 
