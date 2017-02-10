@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "24.0.1"
+    buildToolsVersion "25.0.1"
     defaultConfig {
         applicationId "edu.mtu.team9.aspirus"
         minSdkVersion 23
@@ -30,5 +30,6 @@ dependencies {
     compile 'mobi.gspd:segmentedbarview:1.1.6@aar'
     compile 'com.github.IntruderShanky:scatter-piechart:1.0.0'
     testCompile 'junit:junit:4.12'
-    compile 'com.github.felHR85:UsbSerial:4.5'
+    compile 'com.github.PhilJay:MPAndroidChart:v3.0.1'
+    compile 'com.github.lzyzsd:circleprogress:1.2.1'
 }

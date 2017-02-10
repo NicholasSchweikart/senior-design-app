@@ -5,13 +5,14 @@ import android.bluetooth.BluetoothManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.Chronometer;
+import android.widget.ProgressBar;
+
 
 public class LiveSessionActivity extends AppCompatActivity implements TrendelenburgDetector.TrendelenburgEventListener,BluetoothAnklet.AnkletListener {
 
@@ -21,7 +22,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
     // UI Components
-    private Button startButton, pauseButton;
+    private FloatingActionButton startButton, pauseButton;
     private Chronometer chronometer;
     private View layoutWaitScreen, layoutReadyScreen;
 
@@ -31,6 +32,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
     // Control Variables
     private boolean SYSTEM_RUNNING = false;
+
 
     /***********************************************************************************************
      * Activity Functions
@@ -53,9 +55,13 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         leftAnklet = new BluetoothAnklet(LEFT_ANKLET_ADDRESS, 'L', mBluetoothAdapter, this);
 
         // Access UI Components
-        startButton = (Button) findViewById(R.id.start_button);
-        pauseButton = (Button) findViewById(R.id.pause_button);
+        startButton = (FloatingActionButton) findViewById(R.id.start_button);
+        pauseButton = (FloatingActionButton) findViewById(R.id.pause_button);
         chronometer =   (Chronometer) findViewById(R.id.chronometer);
+        ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setIndeterminate(false);
+        progressBar.setProgress(50);
+
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,7 +84,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
                     leftAnklet.sendStart();
                     trendelenburgDetector.start();
                     final String text = "DONE";
-                    startButton.setText(text);
+
                 }
             }
         });

@@ -1,8 +1,15 @@
 <resources>
-    <string name="app_name">Aspirus</string>
+    <string name="app_name">GaitPro</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
-
+    <string name="good_score_title">Great Work!</string>
+    <string name="good_score_description">This simply descripes why your score is what it is. A good score means.... and ....</string>
+    <string name="limp_review_title">Limp Analysis</string>
+    <string name="limp_review_description">This summarizes what a good numbers here are, and how to interpret things.</string>
+    <string name="trend_review_title">Trendelenburg Analysis</string>
+    <string name="trend_review_description">This summarizes what a good numbers here are, and how to interpret things.</string>
+    <string name="score_review_title">Score Throughout Session</string>
+    <string name="score_review_description">This summarizes what a good numbers here are, and how to interpret things.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="dialog_reconnect_message">We are having trouble connecting your anklets, please ensure that everything is setup correctly</string>

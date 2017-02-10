@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -34,8 +35,8 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
         toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
-        ImageButton newSessionBtn = (ImageButton) findViewById(R.id.new_session_button);
-        ImageButton getHelpBtn = (ImageButton) findViewById(R.id.get_help_button);
+        Button newSessionBtn = (Button) findViewById(R.id.new_session_button);
+        Button getHelpBtn = (Button) findViewById(R.id.get_help_button);
 
         newSessionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
