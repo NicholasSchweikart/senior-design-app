@@ -15,7 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import android.os.Handler;
-import java.util.ArrayList;
+
 import java.util.Locale;
 
 
@@ -28,9 +28,9 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
     // UI Components
     private FloatingActionButton startButton, pauseButton;
-    private TextView countDownText;
-    private View layoutWaitScreen, layoutReadyScreen;
-    ProgressBar progressBar;
+    private TextView countDownText, timeLeftText;
+    private View layoutConnectingOverlay, timeLeftOverlay;
+    private ProgressBar progressBar;
 
     // System Components
     private TrendelenburgDetector trendelenburgDetector;
@@ -73,7 +73,9 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         startButton = (FloatingActionButton) findViewById(R.id.start_button);
         pauseButton = (FloatingActionButton) findViewById(R.id.pause_button);
         countDownText =   (TextView) findViewById(R.id.countDownText);
-
+        layoutConnectingOverlay = findViewById(R.id.layoutConnectingScreen);
+        timeLeftOverlay = findViewById(R.id.layoutTimeLeftScreen);
+        timeLeftText = (TextView)findViewById(R.id.timeLeftText);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressBar.setIndeterminate(false);
@@ -86,15 +88,16 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
             @Override
             public void onClick(View view) {
 
-                if(SYSTEM_STATE == SYSTEM_READY){
+                if(SYSTEM_STATE == SYSTEM_RUNNING){
                     Log.d(TAG, "done button click");
                     stopAll();
                     startSessionReview();
 
                 }else{
                     Log.d(TAG, "start button click");
-                    startAll();
                     startButton.setImageResource(R.drawable.ic_stop_white_24px);
+                    showCountDownTillStart();
+                    handler.postDelayed(startSystem,10000);
                 }
             }
         });
@@ -123,6 +126,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
             wakeLock.release();
         wakeLock = null;
         handler.removeCallbacks(monitorGait);
+        stopAll();
     }
 
     @Override
@@ -151,8 +155,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
     }
 
-    public void startSessionReview()
-    {
+    public void startSessionReview() {
         Log.d(TAG,"Starting Session Review");
 
         // Release our wake lock ASAP
@@ -179,6 +182,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         SYSTEM_STATE = SYSTEM_RUNNING;
         countDownTimer.start();
         trendelenburgDetector.start();
+        leftAnklet.sendStart();
+        rightAnklet.sendStart();
         leftAnklet.activate();
         rightAnklet.activate();
         handler.postDelayed(monitorGait,LIMP_UPDATE_INTERVAL);
@@ -189,7 +194,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
         if(SYSTEM_STATE != SYSTEM_RUNNING)
             return;
-        SYSTEM_STATE = SYSTEM_RUNNING;
+        SYSTEM_STATE = SYSTEM_READY;
         countDownTimer.cancel();
         trendelenburgDetector.Shutdown();
         leftAnklet.shutdown();
@@ -216,6 +221,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
             public void onFinish() {
                 countDownText.setText("Done!");
+                stopAll();
+                startSessionReview();
             }
         };
     }
@@ -228,9 +235,32 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         rightAnklet = new BluetoothAnklet(RIGHT_ANKLET_ADDRESS,'R', mBluetoothAdapter,this);
     }
 
+    public void showCountDownTillStart(){
+
+        timeLeftOverlay.setVisibility(View.VISIBLE);
+        new CountDownTimer(10000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                timeLeftText.setText(String.valueOf(millisUntilFinished/1000));
+            }
+
+            @Override
+            public void onFinish() {
+                timeLeftOverlay.setVisibility(View.GONE);
+            }
+        }.start();
+    }
+
     @Override
     public void onAnkletReady(char ankletId) {
-
+        if(leftAnklet.isConnected() && rightAnklet.isConnected()){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    layoutConnectingOverlay.setVisibility(View.GONE);
+                }
+            });
+        }
     }
 
     @Override
@@ -257,4 +287,10 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         }
     };
 
+    Runnable startSystem = new Runnable() {
+        @Override
+        public void run() {
+            startAll();
+        }
+    };
 }

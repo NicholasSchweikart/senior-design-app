@@ -1,5 +1,6 @@
 package edu.mtu.team9.aspirus;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -27,7 +28,12 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,10 +44,12 @@ public class SessionReviewActivity extends AppCompatActivity {
 
 
     public static final String TAG = "session-review:";
+    private static final String DATA_DIRECTORY = "SessionData";
 
     private LineChart lineChart;
     private PieChart pieChart;
     private DonutProgress donutProgress;
+    private FileOutputStream outputStream;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +111,9 @@ public class SessionReviewActivity extends AppCompatActivity {
 
         donutProgress.setProgress(trendelenburgScore);
 
+        //initFileSystem();
+        //TODO save all session data to the file system!
+
         FloatingActionButton doneButton = (FloatingActionButton) findViewById(R.id.doneButton);
         doneButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,6 +152,25 @@ public class SessionReviewActivity extends AppCompatActivity {
         super.onResume();
         Log.d(TAG, "onResume");
 
+    }
+
+    public boolean initFileSystem(){
+
+        // Open the session files directory.
+        File sessionFilesDirectory = getApplicationContext().getDir(DATA_DIRECTORY, Context.MODE_PRIVATE);
+
+        // Create new file name for this session.
+        Date today = Calendar.getInstance().getTime();
+        String filename = today.toString();
+
+        File fileWithinMyDir = new File(sessionFilesDirectory, filename);   //Getting a file within the dir.
+        try {
+            outputStream = new FileOutputStream(fileWithinMyDir);           //Use the stream as usual to write into the file.
+        } catch (FileNotFoundException e) {
+            Log.e(TAG,"ERROR: couldnt open file directory");
+            return false;
+        }
+        return true;
     }
 
     public void formatPieDataSet(PieDataSet pieDataSet){

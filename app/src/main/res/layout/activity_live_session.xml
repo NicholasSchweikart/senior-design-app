@@ -18,6 +18,16 @@
         android:id="@+id/content_frame">
 
         <include
+            android:id="@+id/layoutConnectingScreen"
+            layout = "@layout/connecting_screen"
+            android:visibility="visible"/>
+
+        <include
+            android:id="@+id/layoutTimeLeftScreen"
+            layout = "@layout/countdown_screen"
+            android:visibility="gone"/>
+
+        <include
             android:id="@+id/layoutLiveScreen"
             layout="@layout/live_screen"
             android:visibility="visible"

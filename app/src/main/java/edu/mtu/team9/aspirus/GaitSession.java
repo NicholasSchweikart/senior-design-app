@@ -1,7 +1,10 @@
 package edu.mtu.team9.aspirus;
 
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -30,6 +33,7 @@ public class GaitSession {
         currentLimpValue = 0.0;
         totalTrendelenburgEvents = 0;
         totalSamples = 0;
+
     }
 
     public void updateLimpStatus(Double leftAcceleration, Double rightAcceleration){

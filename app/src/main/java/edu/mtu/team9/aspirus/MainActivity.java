@@ -19,19 +19,15 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity implements SettingsAuthFragment.NoticeDialogListener {
 
     public static final String TAG = "main";
-    private Toolbar toolbar;
     private static final int REQUEST_ENABLE_BT = 2;
-    private BluetoothAdapter bluetoothAdapter = null;
 
-    Handler handler = new Handler();
-    TrendelenburgDetector a;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Log.d(TAG, "onCreate()");
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
         Button newSessionBtn = (Button) findViewById(R.id.new_session_button);
@@ -71,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
             }
         });
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()) {
             Log.d(TAG, "Enabling bluetooth");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -173,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
                     // User did not enable Bluetooth or an error occurred
                     Log.d(TAG, "BT not enabled");
                     Toast.makeText(this, "Problem in BT Turning ON ", Toast.LENGTH_SHORT).show();
-                    //finish();
+                    finish();
                 }
                 break;
             default:

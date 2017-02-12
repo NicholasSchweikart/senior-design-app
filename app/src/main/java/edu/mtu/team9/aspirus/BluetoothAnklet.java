@@ -49,15 +49,17 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
 
         switch (state) {
             case AnkletConst.CONNECTED:
+                Log.d(TAG, "CONNECTED");
                 ankletState = AnkletConst.STATE_CONNECTED;
-
                 listener.onAnkletReady(ankletID);
                 break;
             case AnkletConst.CONNECTION_FAILED:
+                Log.d(TAG, "CONNECTION FAILED");
                 ankletState = AnkletConst.STATE_CONNECTING;
                 listener.onAnkletFailure(ankletID);
                 break;
             case AnkletConst.CONNECTION_LOST:
+                Log.d(TAG, "CONNECTION LOST");
                 ankletState = AnkletConst.STATE_CONNECTING;
                 //TODO implement autoreconnect feature
                 break;
@@ -79,6 +81,11 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
 
     public void shutdown() {
         bluetoothService.stop();
+    }
+
+    public boolean isConnected(){
+
+        return (ankletState >= AnkletConst.STATE_CONNECTED);
     }
 
     public void enableFileLogging(File loggingOutputFile) {
@@ -138,24 +145,35 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
     public void deActivate(){
         ACTIVE = false;
     }
+
     /***********************************************************************************************
      * Message Processing !!! \n triggers every onDataRecieved event
      **********************************************************************************************/
     @Override
     public void onDataRecieved(byte[] data) {
-
-        if(!ACTIVE)
+        if(data.length < 2)
             return;
+        if(data[0] == AnkletConst.COMMAND_RESPONSE_FLAG){
 
-        String s = new String(data);
-        try{
-            accelerationSum += Double.valueOf(s);
-            accelerationsLogged += 1;
-            Log.d(TAG,"New AVG: " + accelerationSum.toString());
-        }catch (Exception e){
-            Log.d(TAG,"New AVG: bad Value");
+            switch (data[1]){
+                case AnkletConst.RUNNING_FLAG:
+                    ankletState = AnkletConst.STATE_RUNNING;
+                    break;
+
+                case AnkletConst.READY_FLAG:
+                    ankletState = AnkletConst.STATE_READY;
+                    break;
+            }
+        }else{
+            String s = new String(data);
+            try{
+                accelerationSum += Double.valueOf(s);
+                accelerationsLogged += 1;
+                Log.d(TAG,"New AVG: " + accelerationSum.toString());
+            }catch (Exception e){
+                Log.d(TAG,"New AVG: bad Value");
+            }
         }
-
     }
 
 }
