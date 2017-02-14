@@ -1,20 +1,53 @@
 <resources>
+
+    <!-- Strings related to overall app stuff -->
     <string name="app_name">GaitPro</string>
+
     <string name="action_settings">Settings</string>
+
     <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to the session review activity -->
+    <string name="score_overall">Overall Score</string>
+
     <string name="good_score_title">Great Work!</string>
     <string name="good_score_description">This simply descripes why your score is what it is. A good score means.... and ....</string>
+
     <string name="limp_review_title">Limp Analysis</string>
-    <string name="limp_review_description">This summarizes what a good numbers here are, and how to interpret things.</string>
+    <string name="limp_review_description">Your limp analysis score is a simple metric that helps to asses your degree of limping. The pie chart below shows your right and left leg individually.</string>
+
     <string name="trend_review_title">Trendelenburg Analysis</string>
-    <string name="trend_review_description">This summarizes what a good numbers here are, and how to interpret things.</string>
+    <string name="trend_review_description">This score represents the overall percentage of trendelenburg negative samples collected throughout the session. A bad score is anything below 70%, while a good score is anywhere from 70% to 90%, and
+        a great score is 90% or above. Your doctor can more thoroughly explain this metric to you if it is unclear.
+    </string>
+
     <string name="score_review_title">Score Throughout Session</string>
-    <string name="score_review_description">This summarizes what a good numbers here are, and how to interpret things.</string>
+    <string name="score_review_description">This graph shows how your score progressed over the entire session. A great trend to see is a nearly flat line above 90. However, seeing a steady increase in your score over time is also a good sign; especially if you usually score below 80%.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="dialog_reconnect_message">We are having trouble connecting your anklets, please ensure that everything is setup correctly</string>
     <string name="dialog_reconnect_title">Connection Error</string>
     <string name="title_activity_test_settings">Settings</string>
+
+    <!-- Strings related to the session LEGAL ACTIVITY -->
+    <string name="legal_activity_title">Privacy Policy</string>
+    <string name="legal_activity_abstract">We pledge to respect your privacy, to be transparent about our data practices, to keep your data safe, to never sell your personal data, to let you decide how your information is shared, and to only collect data that helps us improve our products and services.</string>
+
+    <string name="legal_activity_data_collection_subheading">Data Collection</string>
+    <string name="legal_activity_data_collection_subtext">This app uses your data to provide you with the best experience possible, to help you make the most of your training sessions, and to improve and protect the Aspirus physical therapy treatment. Here are some examples:</string>
+    <string name="legal_activity_data_collection_bullet1">&#8226; Height, weight, gender and age are used to estimate the center of gravity and movement.</string>
+    <string name="legal_activity_data_collection_bullet2">&#8226;Contact information is collected and used by Aspirus for in clinic use, as well as information to loan out the device. </string>
+    <string name="legal_activity_data_collection_bullet3">&#8226;Data and logs are used in research to understand and improve the overall experience and provide accurate commands to help the user train and heal their gait.</string>
+    <string name="legal_activity_data_collection_bullet4">&#8226;De-identified data that does not identify you may be used to inform the Aspirus or Michigan Technological University about trends; for research use only; or to help develop further models of the device. No other data will be shared in any way.</string>
+
+    <string name="legal_activity_identity_subheading">Data That Could Identify You</string>
+    <string name="legal_activity_identity_subtext">Personally Identifiable Information (PII) is data that includes a personal identifier like your name, email or address, or data that could reasonably be linked back to you will not be collected by this app.</string>
+
+    <string name="legal_activity_duration_subheading">How Long We Keep Your Data</string>
+    <string name="legal_activity_duration_subtext">Your data will only be kept for the amount of time you use this prototype device. After your therapist consults with you about your experience with the device and you no longer need to use the device, all your data will be wiped clean by Aspirus Keweenaw. Only generalized notes, written by the physical therapist, will be kept by the physical therapist in your file for further treatment.  </string>
+
+    <string name="legal_activity_children_subheading">Policy for children</string>
+    <string name="legal_activity_children_subtext">This app and device  is not intended for persons under the age of 13. We do not knowingly collect any personally identifiable information from anyone under the age of 13. </string>
 
     <!-- Strings related to Settings -->
 
@@ -59,9 +92,5 @@
         <item>2</item>
         <item>3</item>
     </string-array>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
 
 </resources>

@@ -217,4 +217,5 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
     public void onAnkletFailure(char ankletID) {
 
     }
+
 }

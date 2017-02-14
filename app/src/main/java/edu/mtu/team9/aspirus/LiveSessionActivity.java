@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.PowerManager;
+import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -27,28 +28,31 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
     // UI Components
-    private FloatingActionButton startButton, pauseButton;
+    private FloatingActionButton startButton;
     private TextView countDownText, timeLeftText;
-    private View layoutConnectingOverlay, timeLeftOverlay;
+    private View connectingOverlay, countDownOverlay;
     private ProgressBar progressBar;
 
     // System Components
     private TrendelenburgDetector trendelenburgDetector;
     private BluetoothAnklet leftAnklet, rightAnklet;
     private GaitSession gaitSession;
-    private CountDownTimer countDownTimer;
+    private CountDownTimer sessionTimer;
     private Handler handler = new Handler();
     PowerManager.WakeLock wakeLock;
+    TextToSpeech textToSpeech;
 
     // Control Variables
-    private int SYSTEM_STATE = 0;
-    private static final int LIMP_UPDATE_INTERVAL = 15000;          // 15 seconds
     private static final int
             SYSTEM_INIT = 0,
-            SYSTEM_READY = 1,
-            SYSTEM_RUNNING = 2,
-            SYSTEM_PAUSED = 3;
+            SYSTEM_RUNNING = 1;
+    private int SYSTEM_STATE;
 
+    // Constants
+    private static final int LIMP_UPDATE_INTERVAL = 15000;          // 15 seconds
+    private static final int COUNT_DOWN_TIME = 10000;               // 10 seconds
+    private static final int SESSION_TIME = 300000;                 // 5 minutes
+    private static final String SCORE_UPDATE_PHRASE = "Your current score is";
     /***********************************************************************************************
      * Activity Functions
      **********************************************************************************************/
@@ -71,10 +75,9 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
         // Access UI Components
         startButton = (FloatingActionButton) findViewById(R.id.start_button);
-        pauseButton = (FloatingActionButton) findViewById(R.id.pause_button);
         countDownText =   (TextView) findViewById(R.id.countDownText);
-        layoutConnectingOverlay = findViewById(R.id.layoutConnectingScreen);
-        timeLeftOverlay = findViewById(R.id.layoutTimeLeftScreen);
+        connectingOverlay = findViewById(R.id.layoutConnectingScreen);
+        countDownOverlay = findViewById(R.id.layoutTimeLeftScreen);
         timeLeftText = (TextView)findViewById(R.id.timeLeftText);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -82,7 +85,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         progressBar.setProgress(0);
 
         // Create the Count Down Timer for the session.
-        initCountDownTimer();
+        initSessionTimer();
+        SYSTEM_STATE = SYSTEM_INIT;
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,23 +94,14 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
                 if(SYSTEM_STATE == SYSTEM_RUNNING){
                     Log.d(TAG, "done button click");
-                    stopAll();
-                    startSessionReview();
 
-                }else{
+                    startSessionReview();
+                }else if(SYSTEM_STATE == SYSTEM_INIT){
                     Log.d(TAG, "start button click");
                     startButton.setImageResource(R.drawable.ic_stop_white_24px);
                     showCountDownTillStart();
-                    handler.postDelayed(startSystem,10000);
+                    handler.postDelayed(startSystem, COUNT_DOWN_TIME);
                 }
-            }
-        });
-
-        pauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "pause button click");
-                SYSTEM_STATE = SYSTEM_PAUSED;
             }
         });
 
@@ -114,6 +109,15 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
         wakeLock.acquire();
+
+        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
+            }
+        });
     }
 
     @Override
@@ -121,12 +125,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
 
-        // Make sure the wake lock is off
-        if(wakeLock != null)
-            wakeLock.release();
-        wakeLock = null;
-        handler.removeCallbacks(monitorGait);
-        stopAll();
+        shutdownSystem();
     }
 
     @Override
@@ -158,11 +157,6 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     public void startSessionReview() {
         Log.d(TAG,"Starting Session Review");
 
-        // Release our wake lock ASAP
-        if(wakeLock != null)
-            wakeLock.release();
-        wakeLock = null;
-
         Intent reviewIntent = new Intent(this, SessionReviewActivity.class);
 
         reviewIntent.putExtra("SCORES_ARRAY", gaitSession.getScores());
@@ -173,37 +167,43 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         finish();
     }
 
-    public void startAll(){
-        Log.d(TAG, "startAll()");
+    public void startSystem(){
+        Log.d(TAG, "startSystem()");
 
-        if(SYSTEM_STATE == SYSTEM_RUNNING)
-            return;
-
-        SYSTEM_STATE = SYSTEM_RUNNING;
-        countDownTimer.start();
+        sessionTimer.start();
         trendelenburgDetector.start();
-        leftAnklet.sendStart();
-        rightAnklet.sendStart();
         leftAnklet.activate();
         rightAnklet.activate();
+        SYSTEM_STATE = SYSTEM_RUNNING;
         handler.postDelayed(monitorGait,LIMP_UPDATE_INTERVAL);
     }
 
-    public void stopAll(){
-        Log.d(TAG, "stopAll()");
+    public void shutdownSystem(){
+        Log.d(TAG, "shutdownSystem()");
 
-        if(SYSTEM_STATE != SYSTEM_RUNNING)
-            return;
-        SYSTEM_STATE = SYSTEM_READY;
-        countDownTimer.cancel();
+        sessionTimer.cancel();
         trendelenburgDetector.Shutdown();
+
+        // Terminate the session successfully
         leftAnklet.shutdown();
         rightAnklet.shutdown();
+
+        handler.removeCallbacks(monitorGait);
+
+        if(textToSpeech !=null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+
+        // Release our wake lock ASAP
+        if(wakeLock != null)
+            wakeLock.release();
+        wakeLock = null;
     }
 
-    public void initCountDownTimer(){
+    public void initSessionTimer(){
 
-        countDownTimer =  new CountDownTimer(300000, 1000) {
+        sessionTimer =  new CountDownTimer(SESSION_TIME, 1000) {
 
             public void onTick(long millisUntilFinished) {
 
@@ -221,13 +221,15 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
             public void onFinish() {
                 countDownText.setText("Done!");
-                stopAll();
+                textToSpeech.speak("Session Done", TextToSpeech.QUEUE_FLUSH,null,null);
+                shutdownSystem();
                 startSessionReview();
             }
         };
     }
 
     public void initAnklets(){
+
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
 
@@ -237,16 +239,20 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
     public void showCountDownTillStart(){
 
-        timeLeftOverlay.setVisibility(View.VISIBLE);
-        new CountDownTimer(10000, 1000) {
+        countDownOverlay.setVisibility(View.VISIBLE);
+        new CountDownTimer(COUNT_DOWN_TIME, 1000) {
+
             @Override
             public void onTick(long millisUntilFinished) {
-                timeLeftText.setText(String.valueOf(millisUntilFinished/1000));
+                String timeLeft = String.valueOf(millisUntilFinished/1000);
+                timeLeftText.setText(timeLeft);
+                textToSpeech.speak(timeLeft, TextToSpeech.QUEUE_FLUSH,null,null);
             }
 
             @Override
             public void onFinish() {
-                timeLeftOverlay.setVisibility(View.GONE);
+                countDownOverlay.setVisibility(View.GONE);
+                textToSpeech.speak("Session Starting Now", TextToSpeech.QUEUE_FLUSH,null,null);
             }
         }.start();
     }
@@ -257,7 +263,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    layoutConnectingOverlay.setVisibility(View.GONE);
+                    connectingOverlay.setVisibility(View.GONE);
                 }
             });
         }
@@ -267,6 +273,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     public void onAnkletFailure(char ankletID) {
 
     }
+
+
     /***********************************************************************************************
      * Gait Logic
      **********************************************************************************************/
@@ -282,15 +290,17 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         public void run() {
             Log.d(TAG,"Running Gait Session Snapshot");
             gaitSession.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
-            gaitSession.takeScoreSnapshot();
+            Integer score = gaitSession.takeScoreSnapshot();
+            textToSpeech.speak(SCORE_UPDATE_PHRASE + score, TextToSpeech.QUEUE_FLUSH,null,null);
             handler.postDelayed(this,LIMP_UPDATE_INTERVAL);
         }
     };
 
     Runnable startSystem = new Runnable() {
+
         @Override
         public void run() {
-            startAll();
+            startSystem();
         }
     };
 }

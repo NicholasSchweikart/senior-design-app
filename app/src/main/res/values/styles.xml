@@ -48,4 +48,20 @@
         <attr name="donut_suffix_text" format="string"/>
         <attr name="donut_background_color" format="color"/>
     </declare-styleable>
+
+    <style name="legalStringSubheading">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginBottom">5sp</item>
+    </style>
+    <style name="legalStringSubtext">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:layout_marginBottom">5sp</item>
+    </style>
+    <style name="legalStringBulletText">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:layout_marginBottom">5sp</item>
+    </style>
 </resources>

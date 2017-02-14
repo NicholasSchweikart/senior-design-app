@@ -1,10 +1,6 @@
 package edu.mtu.team9.aspirus;
 
-import android.os.Environment;
 import android.util.Log;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -47,7 +43,7 @@ public class GaitSession {
         Log.d(TAG, "Update Limp Status: " + currentLimpValue);
     }
 
-    public void takeScoreSnapshot(){
+    public Integer takeScoreSnapshot(){
 
         totalSamples += 1;
 
@@ -58,7 +54,7 @@ public class GaitSession {
             trendScore = 50 * (TR_BAD_THRESH/totalTrendelenburgEvents);
         }
 
-        Integer limpScore = (int)(50 - (50*currentLimpValue));
+        Integer limpScore = (int)(50 - 50 * currentLimpValue);
         if(limpScore < 0){
             limpScore = 10;
         }
@@ -70,6 +66,8 @@ public class GaitSession {
 
         // Reset for the next interval
         totalTrendelenburgEvents = 0;
+
+        return score;
     }
 
     public void incrementTrendel(){
@@ -82,6 +80,7 @@ public class GaitSession {
 
     public int getTrendelenburgScore(){
         int scoreOut = (int)((double)trendelPositiveSamples/totalSamples*100.0);
+        scoreOut = 100 - scoreOut;
         Log.d(TAG,"Final Trendelenburg Score: " + scoreOut);
         return scoreOut;
     }
@@ -101,7 +100,7 @@ public class GaitSession {
         out[0] = out[0]/totalValues;
         out[1] = out[1]/totalValues;
 
-        Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + "RIGHT = " + out[1]);
+        Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + " RIGHT = " + out[1]);
         return out;
     }
 }

@@ -11,21 +11,22 @@
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar"
         />
+
+    <include
+        android:id="@+id/layoutConnectingScreen"
+        layout = "@layout/connecting_screen"
+        android:visibility="visible"/>
+
+    <include
+        android:id="@+id/layoutTimeLeftScreen"
+        layout = "@layout/countdown_screen"
+        android:visibility="gone"/>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/tool_bar"
         android:id="@+id/content_frame">
-
-        <include
-            android:id="@+id/layoutConnectingScreen"
-            layout = "@layout/connecting_screen"
-            android:visibility="visible"/>
-
-        <include
-            android:id="@+id/layoutTimeLeftScreen"
-            layout = "@layout/countdown_screen"
-            android:visibility="gone"/>
 
         <include
             android:id="@+id/layoutLiveScreen"

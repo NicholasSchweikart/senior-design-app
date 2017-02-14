@@ -31,7 +31,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
                     <TextView
-                    android:text="Score"
+                    android:text="@string/score_overall"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/textView3"
@@ -62,7 +62,7 @@
                         android:text="@string/score_review_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/tt"
+                        android:id="@+id/scoreTitleText"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textAlignment="textStart"
                         android:textSize="24sp" />
@@ -71,9 +71,10 @@
                         android:text="@string/score_review_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/textView4"
+                        android:id="@+id/scoreDescriptionText"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:textAlignment="textStart" />
                 </LinearLayout>
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/chart"
@@ -102,7 +103,7 @@
                         android:text="@string/limp_review_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/tt"
+                        android:id="@+id/limpAnalysisTitle"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textAlignment="textStart"
                         android:textSize="24sp" />
@@ -111,9 +112,10 @@
                         android:text="@string/limp_review_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/textView4"
+                        android:id="@+id/limpAnalysisDescription"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:textAlignment="textStart" />
                 </LinearLayout>
 
                 <com.github.mikephil.charting.charts.PieChart
@@ -142,7 +144,7 @@
                         android:text="@string/trend_review_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/tt"
+                        android:id="@+id/trendelTitle"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textAlignment="textStart"
                         android:textSize="24sp" />
@@ -151,9 +153,10 @@
                         android:text="@string/trend_review_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/textView4"
+                        android:id="@+id/trendelDescription"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:textAlignment="textStart" />
                 </LinearLayout>
 
                 <FrameLayout
@@ -188,7 +191,8 @@
                     android:id="@+id/textView5"
                     android:textAppearance="@style/TextAppearance.AppCompat.Display1"
                     android:textColor="@android:color/white"
-                    android:textSize="24sp" />
+                    android:textSize="24sp"
+                    android:textAlignment="textStart" />
 
                 <TextView
                     android:text="@string/good_score_description"
@@ -196,7 +200,8 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/textView4"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
             </LinearLayout>
             <android.support.design.widget.FloatingActionButton
                 android:layout_width="match_parent"
@@ -206,7 +211,8 @@
                 app:srcCompat="@drawable/ic_done_white_24px"
                 android:id="@+id/doneButton"
                 app:backgroundTint="@color/green"
-                android:layout_margin="@dimen/fab_margin"/>
+                android:layout_margin="@dimen/fab_margin"
+                android:scaleType="center"/>
 
         </LinearLayout>
 

@@ -88,6 +88,10 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
         return (ankletState >= AnkletConst.STATE_CONNECTED);
     }
 
+    public boolean isStoped(){
+        return (ankletState == AnkletConst.STATE_READY);
+    }
+
     public void enableFileLogging(File loggingOutputFile) {
         Log.d(TAG, "Enabling file logging in bluetooth service");
 
@@ -106,6 +110,7 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
         accelerationsLogged = 0;
         return out;
     }
+
     /***********************************************************************************************
      * Anklet Command Methods
      **********************************************************************************************/
@@ -151,29 +156,19 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
      **********************************************************************************************/
     @Override
     public void onDataRecieved(byte[] data) {
-        if(data.length < 2)
+
+        if(!ACTIVE || data.length == 0)
             return;
-        if(data[0] == AnkletConst.COMMAND_RESPONSE_FLAG){
 
-            switch (data[1]){
-                case AnkletConst.RUNNING_FLAG:
-                    ankletState = AnkletConst.STATE_RUNNING;
-                    break;
-
-                case AnkletConst.READY_FLAG:
-                    ankletState = AnkletConst.STATE_READY;
-                    break;
-            }
-        }else{
-            String s = new String(data);
-            try{
-                accelerationSum += Double.valueOf(s);
-                accelerationsLogged += 1;
-                Log.d(TAG,"New AVG: " + accelerationSum.toString());
-            }catch (Exception e){
-                Log.d(TAG,"New AVG: bad Value");
-            }
+        String s = new String(data);
+        try{
+            accelerationSum += Double.valueOf(s);
+            accelerationsLogged += 1;
+            Log.d(TAG,"New AVG: " + accelerationSum.toString());
+        }catch (Exception e){
+            Log.d(TAG,"New AVG: bad Value");
         }
+
     }
 
 }

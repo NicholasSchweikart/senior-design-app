@@ -4,9 +4,101 @@
     android:id="@+id/activity_legal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.mtu.team9.aspirus.LegalActivity">
+    tools:context="edu.mtu.team9.aspirus.LegalActivity"
+    android:layout_margin="@dimen/activity_horizontal_margin">
     <include
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar"
         />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tool_bar">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/tool_bar">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_title"
+                android:textSize="30sp"
+                android:textAlignment="center"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_abstract"
+                style="@style/legalStringSubtext"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_data_collection_subheading"
+                style="@style/legalStringSubheading"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_data_collection_subtext"
+                style="@style/legalStringSubtext"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_data_collection_bullet1"
+                style="@style/legalStringBulletText"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_data_collection_bullet2"
+                style="@style/legalStringBulletText"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_data_collection_bullet3"
+                style="@style/legalStringBulletText"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_data_collection_bullet4"
+                style="@style/legalStringBulletText"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_identity_subheading"
+                style="@style/legalStringSubheading"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_identity_subtext"
+                style="@style/legalStringSubtext"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_duration_subheading"
+                style="@style/legalStringSubheading"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_duration_subtext"
+                style="@style/legalStringSubtext"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_children_subheading"
+                style="@style/legalStringSubheading"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legal_activity_children_subtext"
+                style="@style/legalStringSubtext"/>
+        </LinearLayout>
+    </ScrollView>
+
 </RelativeLayout>
