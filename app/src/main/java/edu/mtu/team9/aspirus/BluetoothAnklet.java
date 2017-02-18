@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 /**
  * Created for Aspirus2
@@ -29,18 +30,17 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
     private boolean ACTIVE = false;
 
     // Constants
-    private Double accelerationSum;
-    private int accelerationsLogged = 0;
+    private ArrayList<Double> accelerations;
 
     public BluetoothAnklet(String deviceAddress, char ankletID, BluetoothAdapter adapter, AnkletListener listener) {
 
         this.listener = listener;
-        accelerationSum = 0.0;
         TAG = "BluetoothAnklet-" + ankletID;
         this.ankletID = ankletID;
         BluetoothDevice device = adapter.getRemoteDevice(deviceAddress);
         bluetoothService = new BluetoothService(device, this);
         bluetoothService.connect();
+        accelerations = new ArrayList<Double>();
     }
 
     @Override
@@ -105,9 +105,13 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
     }
 
     public Double getAvgAcceleration(){
-        Double out = accelerationSum/accelerationsLogged;
-        accelerationSum = 0.0;
-        accelerationsLogged = 0;
+        // Calculate Harmonic Mean
+        Double out = 0.0;
+        for (Double value:accelerations) {
+            out += (1/value);
+        }
+        out = accelerations.size()/out;
+        accelerations.clear();
         return out;
     }
 
@@ -162,9 +166,9 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
 
         String s = new String(data);
         try{
-            accelerationSum += Double.valueOf(s);
-            accelerationsLogged += 1;
-            Log.d(TAG,"New AVG: " + accelerationSum.toString());
+            Double in = Double.valueOf(s);
+            accelerations.add(in);
+            Log.d(TAG, "got: " + in);
         }catch (Exception e){
             Log.d(TAG,"New AVG: bad Value");
         }

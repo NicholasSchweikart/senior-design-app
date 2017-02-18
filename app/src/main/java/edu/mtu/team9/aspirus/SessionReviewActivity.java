@@ -3,7 +3,10 @@ package edu.mtu.team9.aspirus;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -44,12 +47,11 @@ public class SessionReviewActivity extends AppCompatActivity {
 
 
     public static final String TAG = "session-review:";
-    private static final String DATA_DIRECTORY = "SessionData";
 
     private LineChart lineChart;
     private PieChart pieChart;
     private DonutProgress donutProgress;
-    private FileOutputStream outputStream;
+    private ArrayList<Integer> scores;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +62,12 @@ public class SessionReviewActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
+        SessionFileSaver sessionFileSaver = new SessionFileSaver(this,handler);
+
         // Parse the intent extras to get the session stats
         Intent intent = getIntent();
-        ArrayList<Integer> scores = intent.getIntegerArrayListExtra("SCORES_ARRAY");
-        double[] legBreakdown = intent.getDoubleArrayExtra("LIMP_ARRAY");
+        scores = intent.getIntegerArrayListExtra("SCORES_ARRAY");
+        int[] legBreakdown = intent.getIntArrayExtra("LIMP_ARRAY");
         int trendelenburgScore = intent.getIntExtra("TRENDELENBURG_SCORE",0);
 
         // Find the Charts in the XML, then fill with data.
@@ -99,8 +103,8 @@ public class SessionReviewActivity extends AppCompatActivity {
 
         // create pie data set
         List<PieEntry> entries2 = new ArrayList<PieEntry>();
-        entries2.add(new PieEntry(60,"Left"));
-        entries2.add(new PieEntry(40,"Right"));
+        entries2.add(new PieEntry(legBreakdown[0],"Left"));
+        entries2.add(new PieEntry(legBreakdown[1],"Right"));
 
         PieDataSet pieDataSet = new PieDataSet(entries2, null);
         formatPieDataSet(pieDataSet);
@@ -111,8 +115,7 @@ public class SessionReviewActivity extends AppCompatActivity {
 
         donutProgress.setProgress(trendelenburgScore);
 
-        //initFileSystem();
-        //TODO save all session data to the file system!
+        sessionFileSaver.appendSession(scores,legBreakdown,trendelenburgScore, averageScore);
 
         FloatingActionButton doneButton = (FloatingActionButton) findViewById(R.id.doneButton);
         doneButton.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +125,20 @@ public class SessionReviewActivity extends AppCompatActivity {
             }
         });
     }
+
+    final Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+
+            switch (msg.what){
+                case SessionFileSaver.SAVE_SUCCESS:
+                    Log.d(TAG, "Data Saved Succesfully");
+                    break;
+
+            }
+            super.handleMessage(msg);
+        }
+    };
 
     @Override
     public void onStart() {
@@ -154,24 +171,6 @@ public class SessionReviewActivity extends AppCompatActivity {
 
     }
 
-    public boolean initFileSystem(){
-
-        // Open the session files directory.
-        File sessionFilesDirectory = getApplicationContext().getDir(DATA_DIRECTORY, Context.MODE_PRIVATE);
-
-        // Create new file name for this session.
-        Date today = Calendar.getInstance().getTime();
-        String filename = today.toString();
-
-        File fileWithinMyDir = new File(sessionFilesDirectory, filename);   //Getting a file within the dir.
-        try {
-            outputStream = new FileOutputStream(fileWithinMyDir);           //Use the stream as usual to write into the file.
-        } catch (FileNotFoundException e) {
-            Log.e(TAG,"ERROR: couldnt open file directory");
-            return false;
-        }
-        return true;
-    }
 
     public void formatPieDataSet(PieDataSet pieDataSet){
         int[] colors = {Color.WHITE,Color.GREEN};
@@ -225,4 +224,5 @@ public class SessionReviewActivity extends AppCompatActivity {
         pieChart.setEntryLabelColor(Color.BLACK);
         pieChart.getLegend().setEnabled(false);
     }
+
 }

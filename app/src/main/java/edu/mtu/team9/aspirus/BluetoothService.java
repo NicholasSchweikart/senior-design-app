@@ -214,13 +214,14 @@ public class BluetoothService {
                     bytesRead = mmInStream.read(buffer, 0, 16);
                     if(loggingEnabled){
                         loggingOutStream.write(buffer,0,bytesRead);
-                    }
-                    for (int i = 0; i < bytesRead; i++){
-                        if(buffer[i] == '\n'){
-                            byte[] out = new byte[i];
-                            System.arraycopy(buffer,0,out,0,i);
-                            listener.onDataRecieved(out);
-                            break;
+                    }else{
+                        for (int i = 0; i < bytesRead; i++){
+                            if(buffer[i] == '\n'){
+                                byte[] out = new byte[i];
+                                System.arraycopy(buffer,0,out,0,i);
+                                listener.onDataRecieved(out);
+                                break;
+                            }
                         }
                     }
 

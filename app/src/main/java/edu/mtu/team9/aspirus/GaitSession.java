@@ -32,15 +32,29 @@ public class GaitSession {
 
     }
 
-    public void updateLimpStatus(Double leftAcceleration, Double rightAcceleration){
+    public String updateLimpStatus(Double leftAcceleration, Double rightAcceleration){
+        String outputLimp = null;
 
         //Push into list for later
         leftData.add(leftAcceleration);
         rightData.add(rightAcceleration);
 
         // Find the difference in limp
-        currentLimpValue = Math.abs(leftAcceleration - rightAcceleration);
+        if(leftAcceleration < rightAcceleration){
+            currentLimpValue = rightAcceleration - leftAcceleration;
+            outputLimp = "left";
+        }
+        else{
+            currentLimpValue = leftAcceleration - rightAcceleration;
+            outputLimp = "right";
+        }
+
+        Log.d(TAG,"Right Avg = " + rightAcceleration + " Left Avg = " + leftAcceleration);
         Log.d(TAG, "Update Limp Status: " + currentLimpValue);
+        if(currentLimpValue > .25){
+            return outputLimp;
+        }
+        return null;
     }
 
     public Integer takeScoreSnapshot(){
@@ -56,7 +70,7 @@ public class GaitSession {
 
         Integer limpScore = (int)(50 - 50 * currentLimpValue);
         if(limpScore < 0){
-            limpScore = 10;
+            limpScore = 0;
         }
 
         Integer score = limpScore + trendScore;
@@ -89,16 +103,18 @@ public class GaitSession {
      * Calculates the average acceleration values on each leg for the hole session.
      * @return
      */
-    public double[] getLimpBreakdown(){
-        double[] out = new double[2];
-
+    public int[] getLimpBreakdown(){
+        int[] out = new int[2];
+        double left = 0.0, right = 0.0;
         int totalValues = leftData.size();
         for (int i = 0; i < totalValues; i++){
-            out[0] += leftData.get(i);
-            out[1] += rightData.get(i);
+            left += leftData.get(i);
+            right += rightData.get(i);
         }
-        out[0] = out[0]/totalValues;
-        out[1] = out[1]/totalValues;
+        left /= totalValues;
+        right /= totalValues;
+        out[0] =  (int)((left)/(right+left)*100);
+        out[1] = 100 - out[0];
 
         Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + " RIGHT = " + out[1]);
         return out;

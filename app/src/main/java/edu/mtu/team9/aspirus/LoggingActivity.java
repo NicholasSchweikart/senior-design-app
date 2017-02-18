@@ -35,8 +35,8 @@ public class LoggingActivity extends AppCompatActivity implements SensorEventLis
 
     // Constants
     private static final int SAMPLE_RATE = 20;          // in ms => 50Hz
-    private static final String LEFT_ANKLET_ADDRESS = "98:D3:34:90:DC:D0";
-    private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
+    private static final String RIGHT_ANKLET_ADDRESS= "98:D3:34:90:DC:D0";
+    private static final String LEFT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
     // Control Variables
     private boolean STATE_LOGGING = false;

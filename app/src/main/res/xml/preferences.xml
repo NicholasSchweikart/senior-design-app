@@ -1,27 +1,19 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/pref_title_login">
+
+    <PreferenceCategory android:title="@string/pref_title_access">
         <!-- NOTE: EditTextPreference accepts EditText attributes. -->
         <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
         <EditTextPreference
-            android:defaultValue="@string/pref_default_display_name"
-            android:inputType="text"
-            android:key="user_name"
-            android:maxLines="1"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/pref_title_display_name"
-
-            />
-        <EditTextPreference
-            android:title="@string/pref_title_userpassword"
+            android:title="@string/pref_title_access_pin"
             android:inputType="textPassword"
             android:key="user_password"
             android:maxLines="1"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:defaultValue="@string/pref_default_userpassword"
+            android:defaultValue="@string/pref_default_access_pin"
             />
     </PreferenceCategory>
+
     <PreferenceCategory
         android:title="@string/pref_title_data_behaviour">
         <CheckBoxPreference
@@ -30,11 +22,6 @@
             android:key="data_logging_enabled"
             android:defaultValue="false"
             />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/pref_title_anklet_setup">
-
     </PreferenceCategory>
 
 </PreferenceScreen>

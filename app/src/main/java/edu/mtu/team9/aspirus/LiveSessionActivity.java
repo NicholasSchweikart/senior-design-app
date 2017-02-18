@@ -24,8 +24,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
 
     public static final String TAG = "Live-Session";
-    private static final String LEFT_ANKLET_ADDRESS = "98:D3:34:90:DC:D0";
-    private static final String RIGHT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
+    private static final String RIGHT_ANKLET_ADDRESS= "98:D3:34:90:DC:D0";
+    private static final String LEFT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
     // UI Components
     private FloatingActionButton startButton;
@@ -49,10 +49,10 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     private int SYSTEM_STATE;
 
     // Constants
-    private static final int LIMP_UPDATE_INTERVAL = 15000;          // 15 seconds
+    private static final int LIMP_UPDATE_INTERVAL = 15000;          // 30 seconds
     private static final int COUNT_DOWN_TIME = 10000;               // 10 seconds
     private static final int SESSION_TIME = 300000;                 // 5 minutes
-    private static final String SCORE_UPDATE_PHRASE = "Your current score is";
+    private static final String LIMP_UPDATE_PHRASE = "Detecting a limp on your ";
     /***********************************************************************************************
      * Activity Functions
      **********************************************************************************************/
@@ -172,6 +172,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
         sessionTimer.start();
         trendelenburgDetector.start();
+        leftAnklet.sendStart();
+        rightAnklet.sendStart();
         leftAnklet.activate();
         rightAnklet.activate();
         SYSTEM_STATE = SYSTEM_RUNNING;
@@ -289,9 +291,11 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         @Override
         public void run() {
             Log.d(TAG,"Running Gait Session Snapshot");
-            gaitSession.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
+            String limpPhrase = gaitSession.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
             Integer score = gaitSession.takeScoreSnapshot();
-            textToSpeech.speak(SCORE_UPDATE_PHRASE + score, TextToSpeech.QUEUE_FLUSH,null,null);
+            if(limpPhrase != null){
+                textToSpeech.speak(LIMP_UPDATE_PHRASE + limpPhrase + "leg.", TextToSpeech.QUEUE_FLUSH,null,null);
+            }
             handler.postDelayed(this,LIMP_UPDATE_INTERVAL);
         }
     };
