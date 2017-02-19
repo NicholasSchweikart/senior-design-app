@@ -1,9 +1,7 @@
 package edu.mtu.team9.aspirus;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -15,15 +13,10 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.github.lzyzsd.circleprogress.DonutProgress;
-import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -31,13 +24,9 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by nssch on 1/8/2017.
@@ -62,13 +51,18 @@ public class SessionReviewActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
-        SessionFileSaver sessionFileSaver = new SessionFileSaver(this,handler);
+        SessionFileUtility sessionFileUtility = new SessionFileUtility(this,handler);
 
         // Parse the intent extras to get the session stats
         Intent intent = getIntent();
         scores = intent.getIntegerArrayListExtra("SCORES_ARRAY");
         int[] legBreakdown = intent.getIntArrayExtra("LIMP_ARRAY");
         int trendelenburgScore = intent.getIntExtra("TRENDELENBURG_SCORE",0);
+
+        Session session = new Session();
+        session.setScores(scores);
+        session.setLegBreakdown(legBreakdown);
+        session.setTrendelenburgScore(trendelenburgScore);
 
         // Find the Charts in the XML, then fill with data.
         lineChart = (LineChart) findViewById(R.id.chart);
@@ -80,31 +74,21 @@ public class SessionReviewActivity extends AppCompatActivity {
         formatLineChart(lineChart);
         FormatPieChart(pieChart);
 
-        // Convert score data into entry objects, also calculate the average score
-        List<Entry> entries = new ArrayList<Entry>();
-        Integer averageScore = 0;
-        int len = scores.size();
-        for(int i=0; i<len; i++){
-            Integer s = scores.get(i);
-            entries.add(new Entry(i,s));
-            averageScore += s;
-        }
-        averageScore /= len;
-        finalScoreText.setText(averageScore.toString());
+        finalScoreText.setText(String.format(session.getAverageScore().toString(), Locale.US));
 
         // Get new LineDataSet from the score entries.
-        LineDataSet lineDataSet = new LineDataSet(entries, null);
-        formatLineDataSet(lineDataSet);
+        LineDataSet sessionScoresLineDataSet = session.getScoresLineDataSet();
+        formatLineDataSet(sessionScoresLineDataSet);
 
         // Update the chart with the new data
-        LineData lineData = new LineData(lineDataSet);
+        LineData lineData = new LineData(sessionScoresLineDataSet);
         lineChart.setData(lineData);
         //chart.invalidate(); // refresh
 
         // create pie data set
         List<PieEntry> entries2 = new ArrayList<PieEntry>();
-        entries2.add(new PieEntry(legBreakdown[0],"Left"));
-        entries2.add(new PieEntry(legBreakdown[1],"Right"));
+        entries2.add(new PieEntry(session.getLegBreakdownLeft(),"Left"));
+        entries2.add(new PieEntry(session.getLegBreakdownRight(),"Right"));
 
         PieDataSet pieDataSet = new PieDataSet(entries2, null);
         formatPieDataSet(pieDataSet);
@@ -113,9 +97,7 @@ public class SessionReviewActivity extends AppCompatActivity {
         pieData.setValueTextColor(Color.BLACK);
         pieChart.setData(pieData);
 
-        donutProgress.setProgress(trendelenburgScore);
-
-        sessionFileSaver.appendSession(scores,legBreakdown,trendelenburgScore, averageScore);
+        donutProgress.setProgress(session.getTrendelenburgScore());
 
         FloatingActionButton doneButton = (FloatingActionButton) findViewById(R.id.doneButton);
         doneButton.setOnClickListener(new View.OnClickListener() {
@@ -126,12 +108,12 @@ public class SessionReviewActivity extends AppCompatActivity {
         });
     }
 
-    final Handler handler = new Handler(){
+    final static Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
 
             switch (msg.what){
-                case SessionFileSaver.SAVE_SUCCESS:
+                case SessionFileUtility.SAVE_SUCCESS:
                     Log.d(TAG, "Data Saved Succesfully");
                     break;
 
