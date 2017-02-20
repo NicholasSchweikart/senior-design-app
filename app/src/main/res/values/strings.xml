@@ -27,7 +27,6 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="dialog_reconnect_message">We are having trouble connecting your anklets, please ensure that everything is setup correctly</string>
     <string name="dialog_reconnect_title">Connection Error</string>
-    <string name="title_activity_test_settings">Settings</string>
 
     <!-- Strings related to the session LEGAL ACTIVITY -->
     <string name="legal_activity_title">Privacy Policy</string>
@@ -53,35 +52,11 @@
 
     <!-- Example General settings -->
 
-    <string name="pref_default_pin">1212</string>
     <string name="pref_title_access_pin">Access Pin</string>
     <string name="pref_title_access">System Protection</string>
     <string name="pref_default_access_pin">1212</string>
     <string name="pref_title_data_behaviour">System Behaviour</string>
     <string name="pref_title_datalog_enable">Enable Data Logging</string>
     <string name="pref_datalog_summary">Allows the device to store data for every user session.</string>
-
-    <string-array name="pref_example_list_titles">
-        <item>Always</item>
-        <item>When possible</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_example_list_values">
-        <item>1</item>
-        <item>0</item>
-        <item>-1</item>
-    </string-array>
-
-    <string-array name="list_preference_entries">
-        <item>Entry 1</item>
-        <item>Entry 2</item>
-        <item>Entry 3</item>
-    </string-array>
-
-    <string-array name="list_preference_entry_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
 
 </resources>

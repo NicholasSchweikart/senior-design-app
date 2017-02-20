@@ -17,7 +17,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible"
-            android:id="@+id/layoutReadyScreen"
             android:gravity="center_horizontal">
 
             <LinearLayout
@@ -34,8 +33,7 @@
                     android:text="@string/score_overall"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView3"
-                    android:textAppearance="@android:style/TextAppearance.Material.Display2"
+                        android:textAppearance="@android:style/TextAppearance.Material.Display2"
                     android:textAlignment="center"
                         android:textColor="@android:color/white" />
 
@@ -62,7 +60,6 @@
                         android:text="@string/score_review_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/scoreTitleText"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textAlignment="textStart"
                         android:textSize="24sp" />
@@ -71,7 +68,6 @@
                         android:text="@string/score_review_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/scoreDescriptionText"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textSize="18sp"
                         android:textAlignment="textStart" />
@@ -103,7 +99,6 @@
                         android:text="@string/limp_review_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/limpAnalysisTitle"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textAlignment="textStart"
                         android:textSize="24sp" />
@@ -112,7 +107,6 @@
                         android:text="@string/limp_review_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/limpAnalysisDescription"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textSize="18sp"
                         android:textAlignment="textStart" />
@@ -144,7 +138,6 @@
                         android:text="@string/trend_review_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/trendelTitle"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textAlignment="textStart"
                         android:textSize="24sp" />
@@ -153,7 +146,6 @@
                         android:text="@string/trend_review_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/trendelDescription"
                         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                         android:textSize="18sp"
                         android:textAlignment="textStart" />
@@ -188,7 +180,6 @@
                     android:text="@string/good_score_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView5"
                     android:textAppearance="@style/TextAppearance.AppCompat.Display1"
                     android:textColor="@android:color/white"
                     android:textSize="24sp"
@@ -198,7 +189,6 @@
                     android:text="@string/good_score_description"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView4"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                     android:textSize="18sp"
                     android:textAlignment="textStart" />

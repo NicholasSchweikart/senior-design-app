@@ -136,7 +136,7 @@ public class BluetoothService {
                 UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
                 tmp = device.createRfcommSocketToServiceRecord(uuid);
             } catch (IOException e) {
-                Log.e(TAG, "Create RFcomm socket failed", e);
+                Log.e(TAG, "Create RFcomm socket failed");
             }
             mmSocket = tmp;
         }
@@ -226,8 +226,6 @@ public class BluetoothService {
                     }
 
                 } catch (IOException e) {
-
-                    Log.e(TAG, "Connection Lost", e);
                     connectionLost();
                     break;
                 }

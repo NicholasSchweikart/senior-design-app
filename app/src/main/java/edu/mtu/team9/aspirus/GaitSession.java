@@ -1,7 +1,13 @@
 package edu.mtu.team9.aspirus;
 
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created for Aspirus2
@@ -88,6 +94,31 @@ public class GaitSession {
         totalTrendelenburgEvents+=1;
     }
 
+
+    public JSONObject toJSON(){
+        try {
+            JSONObject sessionData = new JSONObject("{}");
+            JSONArray scoresArray = new JSONArray();
+            sessionData.put("date", Calendar.getInstance().getTime());
+            sessionData.put("final_score", getAverageScore());
+            sessionData.put("trendelenburg_score", getTrendelenburgScore());
+
+            int[] lb = getLimpBreakdown();
+            sessionData.put("left_leg_percent", lb[0]);
+            sessionData.put("right_leg_percent", lb[1]);
+
+            for (Integer score : scores) {
+                scoresArray.put(score);
+            }
+
+            sessionData.put("scores_array", scoresArray);
+            return sessionData;
+        } catch (JSONException e) {
+            Log.e(TAG,"Error parsing to json");
+            return null;
+        }
+    }
+
     public ArrayList<Integer> getScores(){
         return this.scores;
     }
@@ -98,10 +129,20 @@ public class GaitSession {
         Log.d(TAG,"Final Trendelenburg Score: " + scoreOut);
         return scoreOut;
     }
+    public Integer getAverageScore(){
+        Integer averageScore = 0;
+        int len = scores.size();
+        for(int i=0; i<len; i++){
+            Integer s = scores.get(i);
+            averageScore += s;
+        }
+        averageScore /= len;
 
+        return averageScore;
+    }
     /**
      * Calculates the average acceleration values on each leg for the hole session.
-     * @return
+     * @return  the percent of effort on each leg averaged over the whole session.
      */
     public int[] getLimpBreakdown(){
         int[] out = new int[2];
@@ -115,8 +156,12 @@ public class GaitSession {
         right /= totalValues;
         out[0] =  (int)((left)/(right+left)*100);
         out[1] = 100 - out[0];
-
+        if(out[1] == 100 || out[0] == 100){
+            out[0] = 50;
+            out[1] = 50;
+        }
         Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + " RIGHT = " + out[1]);
         return out;
     }
+
 }

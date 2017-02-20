@@ -38,11 +38,16 @@ public class PerformanceReviewActivity extends AppCompatActivity {
                     break;
                 case SessionFileUtility.OPEN_SUCCESS:
                     Log.d(TAG, "Open sessions file!");
+                    sessionDataReady();
                     break;
             }
             super.handleMessage(msg);
         }
     };
+
+    private void sessionDataReady(){
+
+    }
 
     @Override
     public void onDestroy() {

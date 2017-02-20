@@ -159,9 +159,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
         Intent reviewIntent = new Intent(this, SessionReviewActivity.class);
 
-        reviewIntent.putExtra("SCORES_ARRAY", gaitSession.getScores());
-        reviewIntent.putExtra("LIMP_ARRAY", gaitSession.getLimpBreakdown());
-        reviewIntent.putExtra("TRENDELENBURG_SCORE", gaitSession.getTrendelenburgScore());
+        reviewIntent.putExtra("JSON_SESSION_STRING", gaitSession.toJSON().toString());
 
         startActivity(reviewIntent);
         finish();

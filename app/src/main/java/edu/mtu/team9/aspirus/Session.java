@@ -3,6 +3,8 @@ package edu.mtu.team9.aspirus;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineDataSet;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +18,13 @@ public class Session {
     private ArrayList<Integer> scores;
     private int[] legBreakdown;
     private int trendelenburgScore;
-    private Integer averageScore;
+    private int averageScore;
     private LineDataSet lineDataSet = null;
+
     Session(){
+
+    }
+    Session(JSONObject jsonSession){
 
     }
     public void setScores(ArrayList<Integer> scores){
@@ -33,18 +39,10 @@ public class Session {
         this.trendelenburgScore = trendelenburgScore;
 
     }
-    public Integer getAverageScore(){
-
-        if(averageScore != null)
-            return averageScore;
-
-        int len = scores.size();
-        for(int i=0; i<len; i++){
-            Integer s = scores.get(i);
-            averageScore += s;
-        }
-        averageScore /= len;
-
+    public void setAverageScore(int score){
+        this.averageScore = score;
+    }
+    public int getAverageScore(){
         return averageScore;
     }
     public ArrayList<Integer> getScores(){
@@ -64,14 +62,7 @@ public class Session {
         if(lineDataSet != null)
             return lineDataSet;
 
-        List<Entry> entries = new ArrayList<Entry>();
 
-        int len = scores.size();
-        for(int i=0; i<len; i++){
-            Integer s = scores.get(i);
-            entries.add(new Entry(i,s));
-        }
-        lineDataSet = new LineDataSet(entries, null);
         return lineDataSet;
     }
 }

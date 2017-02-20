@@ -29,7 +29,6 @@
         android:id="@+id/content_frame">
 
         <include
-            android:id="@+id/layoutLiveScreen"
             layout="@layout/live_screen"
             android:visibility="visible"
             />

@@ -3,20 +3,9 @@
     <color name="colorPrimary">#4caf50</color>
     <color name="colorPrimaryDark">#2e8326</color>
     <color name="colorAccent">#66bb6a</color>
-    <color name="textWhite">#e8f5e9</color>
 
     <item name="blue" type="color">#33b5e5</item>
-    <item name="purple" type="color">#FFAA66CC</item>
     <item name="green" type="color">#99cc00</item>
-    <item name="orange" type="color">#66bb6a</item>
-    <item name="red" type="color">#FFFF4444</item>
 
 
-    <integer-array name="androidcolors">
-        <item>@color/blue</item>
-        <item>@color/purple</item>
-        <item>@color/green</item>
-        <item>@color/orange</item>
-        <item>@color/red</item>
-    </integer-array>
 </resources>

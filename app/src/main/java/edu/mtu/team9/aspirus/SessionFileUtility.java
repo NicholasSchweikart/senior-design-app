@@ -34,19 +34,20 @@ public class SessionFileUtility {
     private Context context;
     private JSONObject sessionDataObject = null;
     private Handler handler;
-
+    private ArrayList<Session> sessionsArrayList;
     private File JSONfile;
 
     SessionFileUtility(Context context, Handler handler){
         this.context = context;
         this.handler = handler;
+        sessionsArrayList = new ArrayList<Session>();
     }
 
     private class BuildAndSaveSession extends Thread{
-        Session session;
+        JSONObject newSession;
 
-        BuildAndSaveSession(Session session){
-            this.session = session;
+        BuildAndSaveSession(JSONObject newSession){
+            this.newSession = newSession;
         }
 
         @Override
@@ -58,21 +59,7 @@ public class SessionFileUtility {
                 Log.e(TAG, "Error couldnt open sessions data file");
                 message.what = OPEN_FAILURE;
             }else {
-
-                JSONObject newSession = new JSONObject();
-                JSONArray scoresArray = new JSONArray();
-
-                for (Integer score : session.getScores()) {
-                    scoresArray.put(score);
-                }
-
                 try {
-                    newSession.put("date", Calendar.getInstance().getTime());
-                    newSession.put("final_score", session.getAverageScore());
-                    newSession.put("trendelenburg_score", session.getTrendelenburgScore());
-                    newSession.put("left_leg_percent", session.getLegBreakdownLeft());
-                    newSession.put("right_leg_percent", session.getLegBreakdownRight());
-                    newSession.put("scores_array", scoresArray);
                     sessionDataObject.getJSONArray("sessions_array").put(newSession);
                     message.what = SAVE_SUCCESS;
                 } catch (JSONException e) {
@@ -84,6 +71,7 @@ public class SessionFileUtility {
                     message.what = SAVE_FAILURE;
                 }
             }
+
             // Alert the UI thread to the changes
             handler.sendMessage(message);
         }
@@ -100,6 +88,16 @@ public class SessionFileUtility {
                 message.what = OPEN_FAILURE;
             }else {
                 message.what = OPEN_SUCCESS;
+            }
+
+            try {
+                JSONArray sessionsArray = sessionDataObject.getJSONArray("sessions_array");
+                int len = sessionsArray.length();
+                for(int i = 0; i < len; i++){
+                    sessionsArrayList.add(new Session(sessionsArray.getJSONObject(i)));
+                }
+            } catch (JSONException e) {
+                Log.e(TAG,"Error couldnt create sessionsArrayList");
             }
 
             // Alert the UI thread to the changes
@@ -188,7 +186,8 @@ public class SessionFileUtility {
         new GetSessionsData().start();
     }
 
-    public void saveSession(){
-
+    public void saveSession(JSONObject newSession){
+        new BuildAndSaveSession(newSession).start();
     }
+
 }
