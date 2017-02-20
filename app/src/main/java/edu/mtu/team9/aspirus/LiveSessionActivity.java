@@ -188,7 +188,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         leftAnklet.shutdown();
         rightAnklet.shutdown();
 
-        handler.removeCallbacks(monitorGait);
+        handler.removeCallbacksAndMessages(null);
 
         if(textToSpeech !=null){
             textToSpeech.stop();
@@ -288,7 +288,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     Runnable monitorGait = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG,"Running Gait Session Snapshot");
+            Log.d(TAG,"Running GaitSession Snapshot");
             String limpPhrase = gaitSession.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
             Integer score = gaitSession.takeScoreSnapshot();
             if(limpPhrase != null){

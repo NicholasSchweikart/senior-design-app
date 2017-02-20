@@ -16,7 +16,7 @@ import java.util.Calendar;
  */
 
 public class GaitSession {
-    private final String TAG = "Gait-Session";
+    private final String TAG = "Gait-SessionFromJSON";
 
     private static final int TR_BAD_THRESH = 4;
 

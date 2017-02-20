@@ -25,10 +25,6 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -60,15 +56,8 @@ public class SessionReviewActivity extends AppCompatActivity {
         // Parse the intent extras to get the session stats
         Intent intent = getIntent();
         String sessionJsonString = intent.getStringExtra("JSON_SESSION_STRING");
-        JSONObject session = null;
-
-        try {
-            session = new JSONObject(sessionJsonString);
-        } catch (JSONException e) {
-            Log.e(TAG,"Error parsing intent for JSON string");
-        }
-
-        sessionFileUtility.saveSession(session);
+        SessionFromJSON session = new SessionFromJSON(sessionJsonString);
+        sessionFileUtility.saveSession(session.toJSON());
 
         // Find the Charts in the XML, then fill with data.
         lineChart = (LineChart) findViewById(R.id.chart);
@@ -80,24 +69,10 @@ public class SessionReviewActivity extends AppCompatActivity {
         formatLineChart(lineChart);
         FormatPieChart(pieChart);
 
-        try {
-            finalScoreText.setText(String.format(String.valueOf(session.getInt("final_score")), Locale.US));
-        } catch (JSONException e) {
-            Log.e(TAG,"Error parsing final score");
-        }
 
-        List<Entry> entries = new ArrayList<Entry>();
-        try {
-            JSONArray scoresJSONArray = session.getJSONArray("scores_array");
-            int len = scoresJSONArray.length();
-            for (int i = 0; i < len; i++) {
-                entries.add(new Entry(i, scoresJSONArray.getInt(i)));
-            }
-        }catch (JSONException e){
-            Log.e(TAG,"Error parsing scores array");
-        }
+        finalScoreText.setText(String.format(String.valueOf(session.getFinalScore()), Locale.US));
 
-        LineDataSet sessionScoresLineDataSet = new LineDataSet(entries, null);
+        LineDataSet sessionScoresLineDataSet = session.getScoresLineDataSet();
         formatLineDataSet(sessionScoresLineDataSet);
 
         // Update the chart with the new data
@@ -107,12 +82,9 @@ public class SessionReviewActivity extends AppCompatActivity {
 
         // create pie data set
         List<PieEntry> entries2 = new ArrayList<PieEntry>();
-        try {
-            entries2.add(new PieEntry(session.getInt("left_leg_percent"),"Left"));
-            entries2.add(new PieEntry(session.getInt("right_leg_percent"),"Right"));
-        } catch (JSONException e) {
-            Log.e(TAG,"Error parsing leg breakdown data");
-        }
+        entries2.add(new PieEntry(session.getLegBreakdownLeft(),"Left"));
+        entries2.add(new PieEntry(session.getLegBreakdownRight(),"Right"));
+
 
         PieDataSet pieDataSet = new PieDataSet(entries2, null);
         formatPieDataSet(pieDataSet);
@@ -121,11 +93,7 @@ public class SessionReviewActivity extends AppCompatActivity {
         pieData.setValueTextColor(Color.BLACK);
         pieChart.setData(pieData);
 
-        try {
-            donutProgress.setProgress(session.getInt("trendelenburg_score"));
-        } catch (JSONException e) {
-            Log.e(TAG,"Error parsing trendelenburg score");
-        }
+        donutProgress.setProgress(session.getTrendelenburgScore());
 
         FloatingActionButton doneButton = (FloatingActionButton) findViewById(R.id.doneButton);
         doneButton.setOnClickListener(new View.OnClickListener() {

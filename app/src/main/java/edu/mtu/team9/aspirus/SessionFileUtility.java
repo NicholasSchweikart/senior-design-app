@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Created for Aspirus2
@@ -34,13 +33,13 @@ public class SessionFileUtility {
     private Context context;
     private JSONObject sessionDataObject = null;
     private Handler handler;
-    private ArrayList<Session> sessionsArrayList;
+    private ArrayList<SessionFromJSON> sessionsArrayList;
     private File JSONfile;
 
     SessionFileUtility(Context context, Handler handler){
         this.context = context;
         this.handler = handler;
-        sessionsArrayList = new ArrayList<Session>();
+        sessionsArrayList = new ArrayList<SessionFromJSON>();
     }
 
     private class BuildAndSaveSession extends Thread{
@@ -94,7 +93,7 @@ public class SessionFileUtility {
                 JSONArray sessionsArray = sessionDataObject.getJSONArray("sessions_array");
                 int len = sessionsArray.length();
                 for(int i = 0; i < len; i++){
-                    sessionsArrayList.add(new Session(sessionsArray.getJSONObject(i)));
+                    sessionsArrayList.add(new SessionFromJSON(sessionsArray.getJSONObject(i).toString()));
                 }
             } catch (JSONException e) {
                 Log.e(TAG,"Error couldnt create sessionsArrayList");
@@ -155,11 +154,7 @@ public class SessionFileUtility {
             return false;
         }
 
-        if(!saveSessionDataFile()){
-            return false;
-        }
-
-        return  true;
+        return  saveSessionDataFile();
     }
 
     private boolean saveSessionDataFile(){
