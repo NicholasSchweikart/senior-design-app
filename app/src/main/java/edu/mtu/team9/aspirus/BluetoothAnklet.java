@@ -85,7 +85,7 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
 
     public boolean isConnected(){
 
-        return (ankletState >= AnkletConst.STATE_CONNECTED);
+        return (ankletState == AnkletConst.STATE_CONNECTED);
     }
 
     public boolean isStoped(){
@@ -106,13 +106,14 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
 
     public Double getAvgAcceleration(){
         // Calculate Harmonic Mean
-        Double out = 0.0;
+        Double out = 0.0, nmean = 0.0;
         for (Double value:accelerations) {
-            out += (1/value);
+            nmean += value;
         }
-        out = accelerations.size()/out;
+        nmean = nmean/accelerations.size();
         accelerations.clear();
-        return out;
+        Log.d(TAG, "mean: " + nmean);
+        return nmean;
     }
 
     /***********************************************************************************************
@@ -159,16 +160,16 @@ public class BluetoothAnklet implements BluetoothService.BluetoothLinkListener {
      * Message Processing !!! \n triggers every onDataRecieved event
      **********************************************************************************************/
     @Override
-    public void onDataRecieved(byte[] data) {
+    public void onDataRecieved(String s) {
 
-        if(!ACTIVE || data.length == 0)
+        if(!ACTIVE )
             return;
 
-        String s = new String(data);
+//        Log.d(TAG,"got: " + s);
         try{
-            Double in = Double.valueOf(s);
+            Double in = Double.parseDouble(s);
             accelerations.add(in);
-            Log.d(TAG, "got: " + in);
+            Log.d(TAG, "value: " + in);
         }catch (Exception e){
             Log.d(TAG,"New AVG: bad Value");
         }

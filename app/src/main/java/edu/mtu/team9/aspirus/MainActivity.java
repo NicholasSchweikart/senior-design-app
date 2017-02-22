@@ -18,7 +18,7 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements SettingsAuthFragment.NoticeDialogListener {
 
-    public static final String TAG = "main";
+    public static final String TAG = "main-activity";
     private static final int REQUEST_ENABLE_BT = 2;
 
     @Override
@@ -67,17 +67,18 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
             }
         });
 
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()) {
             Log.d(TAG, "Enabling bluetooth");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
     }
 
     @Override
@@ -91,19 +92,6 @@ public class MainActivity extends AppCompatActivity implements SettingsAuthFragm
     protected void onStop() {
         Log.d(TAG, "onStop");
         super.onStop();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(TAG, "onRestart");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-
     }
 
     @Override

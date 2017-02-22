@@ -57,7 +57,7 @@ public class GaitSession {
 
         Log.d(TAG,"Right Avg = " + rightAcceleration + " Left Avg = " + leftAcceleration);
         Log.d(TAG, "Update Limp Status: " + currentLimpValue);
-        if(currentLimpValue > .25){
+        if(currentLimpValue > 1.3){
             return outputLimp;
         }
         return null;

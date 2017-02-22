@@ -7,6 +7,7 @@ import android.util.Log;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.UUID;
 
@@ -31,7 +32,7 @@ public class BluetoothService {
 
     public interface BluetoothLinkListener{
         void onStateChange(int state);
-        void onDataRecieved(byte[] data);
+        void onDataRecieved(String data);
     }
 
     public synchronized void connect() {
@@ -181,23 +182,26 @@ public class BluetoothService {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+        private final InputStreamReader inputStreamReader;
 
-        public ConnectedThread(BluetoothSocket socket) {
+        public ConnectedThread(BluetoothSocket  socket) {
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
-
+            InputStreamReader temp = null;
             // Get the input and output streams, using temp objects because
             // member streams are final
             try {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
+                temp = new InputStreamReader(tmpIn,"UTF-8");
             } catch (IOException e) {
                 Log.e(TAG, "Temp sockets not created", e);
             }
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            inputStreamReader = temp;
         }
 
         public void run() {
@@ -211,17 +215,16 @@ public class BluetoothService {
             while (true) {
                 try {
 
-                    bytesRead = mmInStream.read(buffer, 0, 16);
+                    char c = (char)inputStreamReader.read();
+
                     if(loggingEnabled){
-                        loggingOutStream.write(buffer,0,bytesRead);
+                        loggingOutStream.write(c);
                     }else{
-                        for (int i = 0; i < bytesRead; i++){
-                            if(buffer[i] == '\n'){
-                                byte[] out = new byte[i];
-                                System.arraycopy(buffer,0,out,0,i);
-                                listener.onDataRecieved(out);
-                                break;
-                            }
+                        if(c == '\n'){
+                            listener.onDataRecieved(readMessage.toString().trim());
+                            readMessage.setLength(0);
+                        }else{
+                            readMessage.append(c);
                         }
                     }
 

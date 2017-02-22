@@ -38,10 +38,6 @@ public class SessionReviewActivity extends AppCompatActivity {
 
     public static final String TAG = "session-review:";
 
-    private LineChart lineChart;
-    private PieChart pieChart;
-    private DonutProgress donutProgress;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,9 +56,9 @@ public class SessionReviewActivity extends AppCompatActivity {
         sessionFileUtility.saveSession(session.toJSON());
 
         // Find the Charts in the XML, then fill with data.
-        lineChart = (LineChart) findViewById(R.id.chart);
-        pieChart = (PieChart) findViewById(R.id.pieChart);
-        donutProgress = (DonutProgress)findViewById(R.id.donut_progress);
+        LineChart lineChart = (LineChart) findViewById(R.id.chart);
+        PieChart pieChart = (PieChart) findViewById(R.id.pieChart);
+        DonutProgress donutProgress = (DonutProgress) findViewById(R.id.donut_progress);
         TextView finalScoreText = (TextView)findViewById(R.id.finalScoreText);
 
         // Format the charts initially
@@ -133,26 +129,6 @@ public class SessionReviewActivity extends AppCompatActivity {
         Log.d(TAG, "onDestroy()");
         handler.removeCallbacksAndMessages(null);
     }
-
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "onStop");
-        super.onStop();
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(TAG, "onRestart");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-
-    }
-
 
     public void formatPieDataSet(PieDataSet pieDataSet){
         int[] colors = {Color.WHITE,Color.GREEN};
