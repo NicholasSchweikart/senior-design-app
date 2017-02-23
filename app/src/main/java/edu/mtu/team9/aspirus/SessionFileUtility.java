@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.github.mikephil.charting.data.LineDataSet;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +35,7 @@ public class SessionFileUtility {
     private Context context;
     private JSONObject sessionDataObject = null;
     private Handler handler;
-    private ArrayList<SessionFromJSON> sessionsArrayList;
+    private static ArrayList<SessionFromJSON> sessionsArrayList;
     private File JSONfile;
 
     SessionFileUtility(Context context, Handler handler){
@@ -98,6 +100,7 @@ public class SessionFileUtility {
             } catch (JSONException e) {
                 Log.e(TAG,"Error couldnt create sessionsArrayList");
             }
+
 
             // Alert the UI thread to the changes
             handler.sendMessage(message);
@@ -185,4 +188,7 @@ public class SessionFileUtility {
         new BuildAndSaveSession(newSession).start();
     }
 
+    public static ArrayList<SessionFromJSON> getAllSessions() {
+        return sessionsArrayList;
+    }
 }
