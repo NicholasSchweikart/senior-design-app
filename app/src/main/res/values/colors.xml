@@ -6,6 +6,6 @@
 
     <item name="blue" type="color">#33b5e5</item>
     <item name="green" type="color">#99cc00</item>
-    <color name="statusBarColor">#66200000</color>
+    <color name="statusBarColor">#33200000</color>
 
 </resources>
