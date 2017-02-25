@@ -10,7 +10,11 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:scrollIndicators="none"
+        android:scrollbars="none"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
 
         <LinearLayout
             android:orientation="vertical"
@@ -50,34 +54,27 @@
 
                 <View style="@style/Divider"/>
 
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:text="@string/score_review_title"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight=".5"
-                    android:gravity="center_horizontal">
-                    <TextView
-                        android:text="@string/score_review_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textAlignment="textStart"
-                        android:textSize="24sp" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textAlignment="center"
+                    android:textSize="24sp" />
 
-                    <TextView
-                        android:text="@string/score_review_description"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textSize="18sp"
-                        android:textAlignment="textStart" />
-                </LinearLayout>
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/chart"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:paddingTop="5dp" />
 
+                <TextView
+                    android:text="@string/score_review_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
             </LinearLayout>
 
             <View style="@style/Divider"/>
@@ -89,28 +86,13 @@
                 android:gravity="center_horizontal"
                 android:layout_marginBottom="5dp">
 
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:text="@string/limp_review_title"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight=".5"
-                    android:gravity="center_horizontal">
-                    <TextView
-                        android:text="@string/limp_review_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textAlignment="textStart"
-                        android:textSize="24sp" />
-
-                    <TextView
-                        android:text="@string/limp_review_description"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textSize="18sp"
-                        android:textAlignment="textStart" />
-                </LinearLayout>
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textAlignment="center"
+                    android:textSize="24sp" />
 
                 <com.github.mikephil.charting.charts.PieChart
                     android:id="@+id/pieChart"
@@ -118,6 +100,13 @@
                     android:layout_width="200dp"
                     android:layout_height="200dp" />
 
+                <TextView
+                    android:text="@string/limp_review_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
             </LinearLayout>
 
             <View style="@style/Divider"/>
@@ -129,27 +118,13 @@
                 android:gravity="center_horizontal"
                 android:layout_marginBottom="5dp">
 
-                <LinearLayout
-                    android:orientation="vertical"
+                <TextView
+                    android:text="@string/trend_review_title"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_horizontal">
-                    <TextView
-                        android:text="@string/trend_review_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textAlignment="textStart"
-                        android:textSize="24sp" />
-
-                    <TextView
-                        android:text="@string/trend_review_description"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                        android:textSize="18sp"
-                        android:textAlignment="textStart" />
-                </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textAlignment="center"
+                    android:textSize="24sp" />
 
                 <FrameLayout
                     android:layout_width="wrap_content"
@@ -165,6 +140,14 @@
                         app:donut_unfinished_stroke_width="4dp"
                         app:donut_unfinished_color="@android:color/white"/>
                 </FrameLayout>
+
+                <TextView
+                    android:text="@string/trend_review_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
 
             </LinearLayout>
 
@@ -183,7 +166,7 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Display1"
                     android:textColor="@android:color/white"
                     android:textSize="24sp"
-                    android:textAlignment="textStart" />
+                    android:textAlignment="center" />
 
                 <TextView
                     android:text="@string/good_score_description"
@@ -193,11 +176,12 @@
                     android:textSize="18sp"
                     android:textAlignment="textStart" />
             </LinearLayout>
+
             <android.support.design.widget.FloatingActionButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="true"
-                app:fabSize="normal"
+                app:fabSize="mini"
                 app:srcCompat="@drawable/ic_done_white_24px"
                 android:id="@+id/doneButton"
                 app:backgroundTint="@color/green"

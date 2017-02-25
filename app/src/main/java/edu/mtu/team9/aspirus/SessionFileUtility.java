@@ -1,11 +1,8 @@
 package edu.mtu.team9.aspirus;
 
 import android.content.Context;
-import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-
-import com.github.mikephil.charting.data.LineDataSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,84 +24,51 @@ import java.util.ArrayList;
 public class SessionFileUtility {
     public static final String TAG = "session-file-utility:";
 
-    public static final int SAVE_SUCCESS = 1,
-            SAVE_FAILURE = 2,
-            OPEN_FAILURE = 3,
-            OPEN_SUCCESS = 4;
-
     private Context context;
     private JSONObject sessionDataObject = null;
-    private Handler handler;
-    private static ArrayList<SessionFromJSON> sessionsArrayList;
+    private ArrayList<SessionFromJSONString> sessionsArrayList;
     private File JSONfile;
 
-    SessionFileUtility(Context context, Handler handler){
+    SessionFileUtility(Context context){
         this.context = context;
-        this.handler = handler;
-        sessionsArrayList = new ArrayList<SessionFromJSON>();
+        sessionsArrayList = new ArrayList<SessionFromJSONString>();
     }
 
-    private class BuildAndSaveSession extends Thread{
-        JSONObject newSession;
+    public boolean saveSession(JSONObject newSession){
 
-        BuildAndSaveSession(JSONObject newSession){
-            this.newSession = newSession;
+        if(!openSessionDataFile()){
+            Log.e(TAG, "Error couldnt open sessions data file");
+            return false;
         }
 
-        @Override
-        public void run(){
-
-            Message message = new Message();
-
-            if(!openSessionDataFile()){
-                Log.e(TAG, "Error couldnt open sessions data file");
-                message.what = OPEN_FAILURE;
-            }else {
-                try {
-                    sessionDataObject.getJSONArray("sessions_array").put(newSession);
-                    message.what = SAVE_SUCCESS;
-                } catch (JSONException e) {
-                    Log.e(TAG, "Error building new session object");
-                    message.what = SAVE_FAILURE;
-                }
-
-                if (!saveSessionDataFile()) {
-                    message.what = SAVE_FAILURE;
-                }
-            }
-
-            // Alert the UI thread to the changes
-            handler.sendMessage(message);
+        try {
+            sessionDataObject.getJSONArray("sessions_array").put(newSession);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error building new session object");
+            return false;
         }
+
+        return saveSessionDataFile();
     };
 
-    private class GetSessionsData extends Thread{
-        @Override
-        public void run(){
+    public boolean getSessionsData(){
 
-            Message message = new Message();
-
-            if(!openSessionDataFile()){
-                Log.e(TAG, "Error sessionDataOBject not ready");
-                message.what = OPEN_FAILURE;
-            }else {
-                message.what = OPEN_SUCCESS;
-            }
-
-            try {
-                JSONArray sessionsArray = sessionDataObject.getJSONArray("sessions_array");
-                int len = sessionsArray.length();
-                for(int i = 0; i < len; i++){
-                    sessionsArrayList.add(new SessionFromJSON(sessionsArray.getJSONObject(i).toString()));
-                }
-            } catch (JSONException e) {
-                Log.e(TAG,"Error couldnt create sessionsArrayList");
-            }
-
-
-            // Alert the UI thread to the changes
-            handler.sendMessage(message);
+        if(!openSessionDataFile()){
+            Log.e(TAG, "Error sessionDataOBject not ready");
+            return  false;
         }
+
+        try {
+            JSONArray sessionsArray = sessionDataObject.getJSONArray("sessions_array");
+            int len = sessionsArray.length();
+            for(int i = 0; i < len; i++){
+                sessionsArrayList.add(new SessionFromJSONString(sessionsArray.getJSONObject(i).toString()));
+            }
+        } catch (JSONException e) {
+            Log.e(TAG,"Error couldnt create sessionsArrayList");
+            return false;
+        }
+        return true;
     }
 
     private boolean openSessionDataFile(){
@@ -180,15 +144,7 @@ public class SessionFileUtility {
         return true;
     }
 
-    public void loadSessionsData(){
-        new GetSessionsData().start();
-    }
-
-    public void saveSession(JSONObject newSession){
-        new BuildAndSaveSession(newSession).start();
-    }
-
-    public static ArrayList<SessionFromJSON> getAllSessions() {
+    public ArrayList<SessionFromJSONString> getSessionsArrayLists() {
         return sessionsArrayList;
     }
 }

@@ -36,7 +36,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     // System Components
     private TrendelenburgDetector trendelenburgDetector;
     private BluetoothAnklet leftAnklet, rightAnklet;
-    private GaitSession gaitSession;
+    private GaitSessionAnalyzer gaitSessionAnalyzer;
     private CountDownTimer sessionTimer;
     private Handler handler = new Handler();
     PowerManager.WakeLock wakeLock;
@@ -53,6 +53,8 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     private static final int COUNT_DOWN_TIME = 10000;               // 10 seconds
     private static final int SESSION_TIME = 300000;                 // 5 minutes
     private static final String LIMP_UPDATE_PHRASE = "Detecting a limp on your ";
+    private static final String SCORE_UPDATE_PHRASE = "Your current score is ";
+
     /***********************************************************************************************
      * Activity Functions
      **********************************************************************************************/
@@ -65,7 +67,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         setSupportActionBar(toolbar);
 
         // Create a new gait session
-        gaitSession = new GaitSession();
+        gaitSessionAnalyzer = new GaitSessionAnalyzer();
 
         // Create new Trendelenburg detector for the session
         trendelenburgDetector = new TrendelenburgDetector(getApplicationContext(), this);
@@ -159,7 +161,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
         Intent reviewIntent = new Intent(this, SessionReviewActivity.class);
 
-        reviewIntent.putExtra("JSON_SESSION_STRING", gaitSession.toJSON().toString());
+        reviewIntent.putExtra("JSON_SESSION_STRING", gaitSessionAnalyzer.toJSON().toString());
 
         startActivity(reviewIntent);
         finish();
@@ -221,7 +223,6 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
 
             public void onFinish() {
                 countDownText.setText("Done!");
-                textToSpeech.speak("Session Done", TextToSpeech.QUEUE_FLUSH,null,null);
                 shutdownSystem();
                 startSessionReview();
             }
@@ -282,17 +283,19 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     @Override
     public void onTrendelenburgEvent() {
         Log.d(TAG, "Trend Spike Detected!");
-        gaitSession.incrementTrendel();
+        gaitSessionAnalyzer.incrementTrendel();
     }
 
     Runnable monitorGait = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG,"Running GaitSession Snapshot");
-            String limpPhrase = gaitSession.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
-            Integer score = gaitSession.takeScoreSnapshot();
+            Log.d(TAG,"----------Taking GaitSessionAnalyzer Snapshot---------");
+            String limpPhrase = gaitSessionAnalyzer.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
+            Integer score = gaitSessionAnalyzer.takeScoreSnapshot();
             if(limpPhrase != null){
-                textToSpeech.speak(LIMP_UPDATE_PHRASE + limpPhrase + "leg.", TextToSpeech.QUEUE_FLUSH,null,null);
+                textToSpeech.speak(LIMP_UPDATE_PHRASE + limpPhrase + "leg. " + SCORE_UPDATE_PHRASE + score, TextToSpeech.QUEUE_FLUSH,null,null);
+            }else{
+                textToSpeech.speak(SCORE_UPDATE_PHRASE + score, TextToSpeech.QUEUE_FLUSH,null,null);
             }
             handler.postDelayed(this,LIMP_UPDATE_INTERVAL);
         }

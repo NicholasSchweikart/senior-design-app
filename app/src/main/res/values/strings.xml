@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Strings related to overall app stuff -->
-    <string name="app_name">GaitPro</string>
+    <string name="app_name">Gait Pro</string>
 
     <string name="action_settings">Settings</string>
 
@@ -11,14 +11,14 @@
     <string name="score_overall">Overall Score</string>
 
     <string name="good_score_title">Great Work!</string>
-    <string name="good_score_description">This simply descripes why your score is what it is. A good score means.... and ....</string>
+    <string name="good_score_description">This simply describes why your score is what it is. A good score means.... and ....</string>
 
     <string name="limp_review_title">Limp Analysis</string>
-    <string name="limp_review_description">Your limp analysis score is a simple metric that helps to asses your degree of limping. The pie chart below shows your right and left leg individually.</string>
+    <string name="limp_review_description">Your limp percentage helps to asses your degree of limping. The pie chart shows your right and left leg individually.</string>
 
     <string name="trend_review_title">Trendelenburg Analysis</string>
-    <string name="trend_review_description">This score represents the overall percentage of trendelenburg negative samples collected throughout the session. A bad score is anything below 70%, while a good score is anywhere from 70% to 90%, and
-        a great score is 90% or above. Your doctor can more thoroughly explain this metric to you if it is unclear.
+    <string name="trend_review_description">This represents the overall percentage of trendelenburg negative samples collected throughout the session. A bad score is anything below 70%, while a good score is anywhere from 70% to 90%, and
+        a great score is 90% or above.
     </string>
 
     <string name="score_review_title">Score Throughout Session</string>

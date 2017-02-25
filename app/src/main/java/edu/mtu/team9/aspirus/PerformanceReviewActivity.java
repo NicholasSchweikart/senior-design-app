@@ -2,8 +2,6 @@ package edu.mtu.team9.aspirus;
 
 import android.graphics.Color;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,39 +39,27 @@ public class PerformanceReviewActivity extends AppCompatActivity {
         formatLineChart(lineChart);
 
         // load in the sessions data file; report sent to callback.
-        sessionFileUtility = new SessionFileUtility(this,handler);
-        sessionFileUtility.loadSessionsData();
+        sessionFileUtility = new SessionFileUtility(this);
+        new populateDashboard().execute();
     }
-
-
-     final Handler handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-
-            switch (msg.what){
-                case SessionFileUtility.OPEN_FAILURE:
-                    Log.e(TAG, "Failed to open sessions file");
-                    break;
-                case SessionFileUtility.OPEN_SUCCESS:
-                    Log.d(TAG, "Open sessions file!");
-                    new populateDashboard().execute();
-                    break;
-            }
-            super.handleMessage(msg);
-        }
-    };
 
     private class populateDashboard extends AsyncTask<Void, Void, FinalSession>{
 
         @Override
         protected FinalSession doInBackground(Void...voids) {
 
-            ArrayList<SessionFromJSON> allSessions = SessionFileUtility.getAllSessions();
+            // Load in the file data.
+            if(!sessionFileUtility.getSessionsData()){
+                Log.e(TAG,"Load failure");
+                return null;
+            }
+
+            ArrayList<SessionFromJSONString> allSessions = sessionFileUtility.getSessionsArrayLists();
             List<Entry> entriesScores = new ArrayList<Entry>();
             List<Entry> entriesLeg = new ArrayList<Entry>();
             List<Entry> entriesTrendel = new ArrayList<Entry>();
             int i = 0;
-            for(SessionFromJSON session : allSessions){
+            for(SessionFromJSONString session : allSessions){
                 entriesScores.add(new Entry(i, session.getFinalScore()));
                 entriesTrendel.add(new Entry(i,session.getTrendelenburgScore()));
                 int legDiff = Math.abs(session.getLegBreakdownLeft() - session.getLegBreakdownRight());
@@ -83,17 +69,17 @@ public class PerformanceReviewActivity extends AppCompatActivity {
 
             LineData lineData1 = new LineData();
 
-            LineDataSet scores = new LineDataSet(entriesScores,null);
-            formatLineDataSet(scores);
+            LineDataSet scores = new LineDataSet(entriesScores,"Session Score");
+            formatLineDataSetScores(scores);
             lineData1.addDataSet(scores);
 
-//            LineDataSet trendel = new LineDataSet(entriesTrendel,null);
-//            formatLineDataSet(trendel);
-//            lineData1.addDataSet(trendel);
+            LineDataSet trendel = new LineDataSet(entriesTrendel,"Trendelenburg Score");
+            formatLineDataSetTrendel(trendel);
+            lineData1.addDataSet(trendel);
 
-//            LineDataSet leg = new LineDataSet(entriesLeg,null);
-//            formatLineDataSet(leg);
-//            lineData1.addDataSet(leg);
+            LineDataSet leg = new LineDataSet(entriesLeg,"Limp Score");
+            formatLineDataSetLimp(leg);
+            lineData1.addDataSet(leg);
 
             return new FinalSession(lineData1);
         }
@@ -102,6 +88,7 @@ public class PerformanceReviewActivity extends AppCompatActivity {
         protected void onPostExecute(FinalSession rslt){
             lineChart.setData(rslt.dataSet);
             lineChart.invalidate();
+            lineChart.setVisibleXRangeMaximum(14);  // Show up to 14 sessions at a time
         }
     }
 
@@ -109,7 +96,6 @@ public class PerformanceReviewActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
-        handler.removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -131,7 +117,7 @@ public class PerformanceReviewActivity extends AppCompatActivity {
 
     }
 
-    public void formatLineDataSet(LineDataSet lineDataSet){
+    public void formatLineDataSetScores(LineDataSet lineDataSet){
         lineDataSet.setColor(Color.WHITE);
         lineDataSet.setValueTextColor(Color.WHITE);
         lineDataSet.setLineWidth(3.0f);
@@ -141,16 +127,31 @@ public class PerformanceReviewActivity extends AppCompatActivity {
         lineDataSet.setHighlightEnabled(false);
     }
 
+    public void formatLineDataSetTrendel(LineDataSet lineDataSet){
+        lineDataSet.setColor(Color.BLUE);
+        lineDataSet.setDrawValues(false);
+        lineDataSet.setLineWidth(1.0f);
+        lineDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
+        lineDataSet.setHighlightEnabled(false);
+        lineDataSet.enableDashedLine(8,4,0);
+        lineDataSet.setDrawCircles(false);
+    }
+    public void formatLineDataSetLimp(LineDataSet lineDataSet){
+        lineDataSet.setColor(Color.BLACK);
+        lineDataSet.setDrawValues(false);
+        lineDataSet.setHighlightEnabled(false);
+        lineDataSet.setLineWidth(1.0f);
+        lineDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
+        lineDataSet.enableDashedLine(16,8,0);
+        lineDataSet.setDrawCircles(false);
+    }
     private void formatLineChart(LineChart lineChart){
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setDrawGridLines(false);
         xAxis.setAxisLineColor(Color.WHITE);
-
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawAxisLine(false);
-
         xAxis.setDrawLabels(false);
-
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setDrawGridLines(false);
         leftAxis.setDrawAxisLine(false);
@@ -165,8 +166,7 @@ public class PerformanceReviewActivity extends AppCompatActivity {
         lineChart.setPinchZoom(false);
         lineChart.setScaleYEnabled(false);
         lineChart.setDragEnabled(true);
-        lineChart.setVisibleXRangeMaximum(5.0f);
-        lineChart.getLegend().setEnabled(false);
+        lineChart.getLegend().setEnabled(true);
     }
 
     private class FinalSession{

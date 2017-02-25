@@ -2,9 +2,8 @@ package edu.mtu.team9.aspirus;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -18,7 +17,6 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
@@ -37,6 +35,12 @@ public class SessionReviewActivity extends AppCompatActivity {
 
 
     public static final String TAG = "session-review:";
+    SessionFromJSONString session;
+    private LineChart lineChart;
+    private PieChart pieChart;
+    private TextView finalScoreText;
+    private DonutProgress donutProgress;
+    private SessionFileUtility sessionFileUtility;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,49 +51,18 @@ public class SessionReviewActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
-        SessionFileUtility sessionFileUtility = new SessionFileUtility(this,handler);
+        sessionFileUtility = new SessionFileUtility(this);
+
+        // Find the Charts in the XML, then fill with data.
+        lineChart = (LineChart) findViewById(R.id.chart);
+        pieChart = (PieChart) findViewById(R.id.pieChart);
+        donutProgress = (DonutProgress) findViewById(R.id.donut_progress);
+        finalScoreText = (TextView)findViewById(R.id.finalScoreText);
 
         // Parse the intent extras to get the session stats
         Intent intent = getIntent();
         String sessionJsonString = intent.getStringExtra("JSON_SESSION_STRING");
-        SessionFromJSON session = new SessionFromJSON(sessionJsonString);
-        sessionFileUtility.saveSession(session.toJSON());
-
-        // Find the Charts in the XML, then fill with data.
-        LineChart lineChart = (LineChart) findViewById(R.id.chart);
-        PieChart pieChart = (PieChart) findViewById(R.id.pieChart);
-        DonutProgress donutProgress = (DonutProgress) findViewById(R.id.donut_progress);
-        TextView finalScoreText = (TextView)findViewById(R.id.finalScoreText);
-
-        // Format the charts initially
-        formatLineChart(lineChart);
-        FormatPieChart(pieChart);
-
-
-        finalScoreText.setText(String.format(String.valueOf(session.getFinalScore()), Locale.US));
-
-        LineDataSet sessionScoresLineDataSet = session.getScoresLineDataSet();
-        formatLineDataSet(sessionScoresLineDataSet);
-
-        // Update the chart with the new data
-        LineData lineData = new LineData(sessionScoresLineDataSet);
-        lineChart.setData(lineData);
-        //chart.invalidate(); // refresh
-
-        // create pie data set
-        List<PieEntry> entries2 = new ArrayList<PieEntry>();
-        entries2.add(new PieEntry(session.getLegBreakdownLeft(),"Left"));
-        entries2.add(new PieEntry(session.getLegBreakdownRight(),"Right"));
-
-
-        PieDataSet pieDataSet = new PieDataSet(entries2, null);
-        formatPieDataSet(pieDataSet);
-
-        PieData pieData = new PieData(pieDataSet);
-        pieData.setValueTextColor(Color.BLACK);
-        pieChart.setData(pieData);
-
-        donutProgress.setProgress(session.getTrendelenburgScore());
+        new SaveSessionToFile().execute(sessionJsonString);
 
         FloatingActionButton doneButton = (FloatingActionButton) findViewById(R.id.doneButton);
         doneButton.setOnClickListener(new View.OnClickListener() {
@@ -101,22 +74,55 @@ public class SessionReviewActivity extends AppCompatActivity {
 
     }
 
-    final Handler handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
+    private class SaveSessionToFile extends AsyncTask<String, Void, Boolean> {
 
-            switch (msg.what){
-                case SessionFileUtility.SAVE_SUCCESS:
-                    Log.d(TAG, "Data Saved Succesfully");
-                    Toast.makeText(SessionReviewActivity.this,"Session Saved!",Toast.LENGTH_SHORT).show();
-                    break;
-                case SessionFileUtility.OPEN_FAILURE:
-                    Log.e(TAG,"Data failed to save");
-                    break;
-            }
-            super.handleMessage(msg);
+        @Override
+        protected Boolean doInBackground(String...param) {
+
+            session = new SessionFromJSONString(param[0]);
+            return sessionFileUtility.saveSession(session.toJSON());
         }
-    };
+
+        @Override
+        protected void onPostExecute(Boolean saveSuccessful){
+
+            if(!saveSuccessful){
+               Log.e(TAG, "Failed to save session");
+                Toast.makeText(getApplicationContext(),"Session Failed to Save", Toast.LENGTH_LONG).show();
+            }
+
+            // Format the charts initially
+            formatLineChart(lineChart);
+            FormatPieChart(pieChart);
+
+
+            finalScoreText.setText(String.format(String.valueOf(session.getFinalScore()), Locale.US));
+
+            LineDataSet sessionScoresLineDataSet = session.getScoresLineDataSet();
+            formatLineDataSet(sessionScoresLineDataSet);
+
+            // Update the chart with the new data
+            LineData lineData = new LineData(sessionScoresLineDataSet);
+            lineChart.setData(lineData);
+            lineChart.invalidate(); // refresh chart
+
+            // create pie data set
+            List<PieEntry> entries2 = new ArrayList<PieEntry>();
+            entries2.add(new PieEntry(session.getLegBreakdownLeft(),"Left"));
+            entries2.add(new PieEntry(session.getLegBreakdownRight(),"Right"));
+
+
+            PieDataSet pieDataSet = new PieDataSet(entries2, null);
+            formatPieDataSet(pieDataSet);
+
+            PieData pieData = new PieData(pieDataSet);
+            pieData.setValueTextColor(Color.BLACK);
+            pieChart.setData(pieData);
+            pieChart.invalidate();
+
+            donutProgress.setProgress(session.getTrendelenburgScore());
+        }
+    }
 
     @Override
     public void onStart() {
@@ -127,7 +133,6 @@ public class SessionReviewActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
-        handler.removeCallbacksAndMessages(null);
     }
 
     public void formatPieDataSet(PieDataSet pieDataSet){
