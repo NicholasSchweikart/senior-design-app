@@ -34,43 +34,6 @@ public class SessionFileUtility {
         sessionsArrayList = new ArrayList<SessionFromJSONString>();
     }
 
-    public boolean saveSession(JSONObject newSession){
-
-        if(!openSessionDataFile()){
-            Log.e(TAG, "Error couldnt open sessions data file");
-            return false;
-        }
-
-        try {
-            sessionDataObject.getJSONArray("sessions_array").put(newSession);
-        } catch (JSONException e) {
-            Log.e(TAG, "Error building new session object");
-            return false;
-        }
-
-        return saveSessionDataFile();
-    };
-
-    public boolean getSessionsData(){
-
-        if(!openSessionDataFile()){
-            Log.e(TAG, "Error sessionDataOBject not ready");
-            return  false;
-        }
-
-        try {
-            JSONArray sessionsArray = sessionDataObject.getJSONArray("sessions_array");
-            int len = sessionsArray.length();
-            for(int i = 0; i < len; i++){
-                sessionsArrayList.add(new SessionFromJSONString(sessionsArray.getJSONObject(i).toString()));
-            }
-        } catch (JSONException e) {
-            Log.e(TAG,"Error couldnt create sessionsArrayList");
-            return false;
-        }
-        return true;
-    }
-
     private boolean openSessionDataFile(){
 
         Log.d(TAG, "Opening Sessions Data File");
@@ -144,7 +107,61 @@ public class SessionFileUtility {
         return true;
     }
 
+    public boolean saveSession(JSONObject newSession){
+
+        if(!openSessionDataFile()){
+            Log.e(TAG, "Error couldnt open sessions data file");
+            return false;
+        }
+
+        try {
+            sessionDataObject.getJSONArray("sessions_array").put(newSession);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error building new session object");
+            return false;
+        }
+
+        return saveSessionDataFile();
+    };
+
+    public boolean getSessionsData(){
+
+        if(!openSessionDataFile()){
+            Log.e(TAG, "Error sessionDataOBject not ready");
+            return  false;
+        }
+
+        try {
+            JSONArray sessionsArray = sessionDataObject.getJSONArray("sessions_array");
+            int len = sessionsArray.length();
+            for(int i = 0; i < len; i++){
+                sessionsArrayList.add(new SessionFromJSONString(sessionsArray.getJSONObject(i).toString()));
+            }
+        } catch (JSONException e) {
+            Log.e(TAG,"Error couldnt create sessionsArrayList");
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean clearSessionsFile() {
+        if(!openSessionDataFile()){
+            Log.e(TAG, "Error couldnt open sessions data file");
+            return false;
+        }
+
+        try {
+            JSONArray emptyArray = new JSONArray();
+            sessionDataObject.put("sessions_array", emptyArray);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error clearing sessions");
+            return false;
+        }
+        return saveSessionDataFile();
+    }
+
     public ArrayList<SessionFromJSONString> getSessionsArrayLists() {
         return sessionsArrayList;
     }
+
 }

@@ -57,7 +57,7 @@ public class GaitSessionAnalyzer {
 
         Log.d(TAG,"Right Avg = " + rightAcceleration + " Left Avg = " + leftAcceleration + "Update Limp Status: " + currentLimpPercent);
 
-        if(currentLimpPercent < 43){
+        if(currentLimpPercent < 47){
             return outputLimp;
         }
         return null;
@@ -75,8 +75,10 @@ public class GaitSessionAnalyzer {
             if(trendScore < 0)
                 trendScore = 0;                         // Minimum of zero
         }
-
-        Integer score = currentLimpPercent + trendScore;
+        int limpScore = 50-(50 - currentLimpPercent) * 5;
+        if(limpScore<0)
+            limpScore = 0;
+        Integer score =  limpScore + trendScore;
         scores.add(score);
         Log.d(TAG, "Score Snapshot: " + score);
 
@@ -95,12 +97,18 @@ public class GaitSessionAnalyzer {
             JSONObject sessionData = new JSONObject("{}");
             JSONArray scoresArray = new JSONArray();
             sessionData.put("date", Calendar.getInstance().getTime());
-            sessionData.put("final_score", getAverageScore());
-            sessionData.put("trendelenburg_score", getTrendelenburgScore());
+
+            int trendelPercentage = getTrendelenburgPercentage();
+            sessionData.put("trendelenburg_percentage", trendelPercentage);
+            int finalTrendelScore = (int)(50*(trendelPercentage/100.0));
+            sessionData.put("trendelenburg_score", finalTrendelScore);
 
             int[] lb = getLimpBreakdown();
             sessionData.put("left_leg_percent", lb[0]);
             sessionData.put("right_leg_percent", lb[1]);
+            sessionData.put("leg_score", lb[2]);
+
+            sessionData.put("final_score", lb[2] + finalTrendelScore);
 
             for (Integer score : scores) {
                 scoresArray.put(score);
@@ -118,29 +126,19 @@ public class GaitSessionAnalyzer {
         return this.scores;
     }
 
-    public int getTrendelenburgScore(){
+    private int getTrendelenburgPercentage(){
         int scoreOut = (int)((double)trendelPositiveSamples/totalSamples*100.0);
         scoreOut = 100 - scoreOut;
-        Log.d(TAG,"Final Trendelenburg Score: " + scoreOut);
+        Log.d(TAG,"Final Trendelenburg Percentage: " + scoreOut);
         return scoreOut;
     }
-    public Integer getAverageScore(){
-        Integer averageScore = 0;
-        int len = scores.size();
-        for(int i=0; i<len; i++){
-            Integer s = scores.get(i);
-            averageScore += s;
-        }
-        averageScore /= len;
 
-        return averageScore;
-    }
     /**
      * Calculates the average acceleration values on each leg for the hole session.
      * @return  the percent of effort on each leg averaged over the whole session.
      */
-    public int[] getLimpBreakdown(){
-        int[] out = new int[2];
+    private int[] getLimpBreakdown(){
+        int[] out = new int[3];
         double left = 0.0, right = 0.0;
         int totalValues = leftData.size();
         for (int i = 0; i < totalValues; i++){
@@ -155,7 +153,10 @@ public class GaitSessionAnalyzer {
             out[0] = 50;
             out[1] = 50;
         }
-        Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + " RIGHT = " + out[1]);
+        out[2] = 50-(Math.abs(out[0] - out[1])*5);
+        if(out[2]<0)
+            out[2] = 0;
+        Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + " RIGHT = " + out[1] + "Overall = " + out[2]);
         return out;
     }
 

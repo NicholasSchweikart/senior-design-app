@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -35,13 +36,14 @@ public class SessionReviewActivity extends AppCompatActivity {
 
 
     public static final String TAG = "session-review:";
+    private static final String COMPLETION_PHRASE = "Your session is complete.";
     SessionFromJSONString session;
     private LineChart lineChart;
     private PieChart pieChart;
     private TextView finalScoreText;
     private DonutProgress donutProgress;
     private SessionFileUtility sessionFileUtility;
-
+    private TextToSpeech textToSpeech;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +74,15 @@ public class SessionReviewActivity extends AppCompatActivity {
             }
         });
 
+        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                    textToSpeech.speak(COMPLETION_PHRASE, TextToSpeech.QUEUE_FLUSH,null,null);
+                }
+            }
+        });
     }
 
     private class SaveSessionToFile extends AsyncTask<String, Void, Boolean> {
@@ -120,7 +131,8 @@ public class SessionReviewActivity extends AppCompatActivity {
             pieChart.setData(pieData);
             pieChart.invalidate();
 
-            donutProgress.setProgress(session.getTrendelenburgScore());
+            donutProgress.setProgress(session.getTrendelenburgPercentage());
+            Toast.makeText(getApplicationContext(),"Session Saved!", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -133,6 +145,10 @@ public class SessionReviewActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
+        if(textToSpeech !=null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
     }
 
     public void formatPieDataSet(PieDataSet pieDataSet){

@@ -65,7 +65,8 @@
             android:name=".SessionReviewActivity"
             android:label="Session Review"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="edu.mtu.team9.aspirus.MainActivity" />

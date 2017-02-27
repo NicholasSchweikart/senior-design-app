@@ -61,9 +61,8 @@ public class PerformanceReviewActivity extends AppCompatActivity {
             int i = 0;
             for(SessionFromJSONString session : allSessions){
                 entriesScores.add(new Entry(i, session.getFinalScore()));
-                entriesTrendel.add(new Entry(i,session.getTrendelenburgScore()));
-                int legDiff = Math.abs(session.getLegBreakdownLeft() - session.getLegBreakdownRight());
-                entriesLeg.add(new Entry(i, 100-legDiff));
+                entriesTrendel.add(new Entry(i, session.getTrendelenburgScore()));
+                entriesLeg.add(new Entry(i, session.getLegScore()));
                 i+=1;
             }
 
@@ -125,25 +124,30 @@ public class PerformanceReviewActivity extends AppCompatActivity {
         lineDataSet.setCircleColor(Color.WHITE);
         lineDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
         lineDataSet.setHighlightEnabled(false);
+        lineDataSet.setDrawCircleHole(false);
     }
 
     public void formatLineDataSetTrendel(LineDataSet lineDataSet){
         lineDataSet.setColor(Color.BLUE);
-        lineDataSet.setDrawValues(false);
+        lineDataSet.setDrawValues(true);
         lineDataSet.setLineWidth(1.0f);
         lineDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
         lineDataSet.setHighlightEnabled(false);
         lineDataSet.enableDashedLine(8,4,0);
-        lineDataSet.setDrawCircles(false);
+        lineDataSet.setCircleRadius(4.0f);
+        lineDataSet.setCircleColor(Color.BLUE);
+        lineDataSet.setDrawCircleHole(false);
     }
     public void formatLineDataSetLimp(LineDataSet lineDataSet){
         lineDataSet.setColor(Color.BLACK);
-        lineDataSet.setDrawValues(false);
+        lineDataSet.setDrawValues(true);
         lineDataSet.setHighlightEnabled(false);
         lineDataSet.setLineWidth(1.0f);
         lineDataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
         lineDataSet.enableDashedLine(16,8,0);
-        lineDataSet.setDrawCircles(false);
+        lineDataSet.setCircleRadius(4.0f);
+        lineDataSet.setCircleColor(Color.BLACK);
+        lineDataSet.setDrawCircleHole(false);
     }
     private void formatLineChart(LineChart lineChart){
         XAxis xAxis = lineChart.getXAxis();
