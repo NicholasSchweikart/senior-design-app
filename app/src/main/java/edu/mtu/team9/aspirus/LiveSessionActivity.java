@@ -1,280 +1,281 @@
 package edu.mtu.team9.aspirus;
 
-import android.app.Activity;
-import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
+import android.bluetooth.BluetoothManager;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
-import android.os.SystemClock;
-import android.support.v4.app.NavUtils;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.CountDownTimer;
+import android.os.PowerManager;
+import android.speech.tts.TextToSpeech;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import android.os.Handler;
 
-/**
- * Created by nssch on 1/8/2017.
- */
+import java.util.Locale;
 
-public class LiveSessionActivity extends AppCompatActivity implements ReconnectFragment.NoticeDialogListener {
 
+public class LiveSessionActivity extends AppCompatActivity implements TrendelenburgDetector.TrendelenburgEventListener,BluetoothAnklet.AnkletListener {
 
     public static final String TAG = "Live-Session";
-    private static final int REQUEST_ENABLE_BT = 2;
-    private Toolbar toolbar;
-    private GaitService gaitService;
-    private BluetoothAdapter bluetoothAdapter = null;
-    private Handler handler;
-    private boolean system_ready = false;
+    //TODO migrate this to a preference setting import rather than a hardcoded field.
+    private static final String RIGHT_ANKLET_ADDRESS= "98:D3:34:90:DC:D0";
+    private static final String LEFT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
-    // UI components
-    private Button startButton, pauseButton, endButton;
-    private Chronometer chronometer;
-    private View layoutWaitScreen, layoutReadyScreen;
+    // UI Components
+    private FloatingActionButton startButton;
+    private TextView countDownText, timeLeftText;
+    private View connectingOverlay, countDownOverlay;
+    private ProgressBar progressBar;
 
+    // System Components
+    private TrendelenburgDetector trendelenburgDetector;
+    private BluetoothAnklet leftAnklet, rightAnklet;
+    private GaitSessionAnalyzer gaitSessionAnalyzer;
+    private CountDownTimer sessionTimer;
+    private Handler handler = new Handler();
+    private PowerManager.WakeLock wakeLock;
+    private TextToSpeech textToSpeech;
+
+    // Control Variables
+    private static final int
+            SYSTEM_INIT = 0,
+            SYSTEM_RUNNING = 1;
+    private int SYSTEM_STATE, updatesSaved;
+
+    // Constants
+    private static final int LIMP_UPDATE_INTERVAL = 15000;          // 30 seconds
+    private static final int COUNT_DOWN_TIME = 10000;               // 10 seconds
+    private static final int SESSION_TIME = 300000;                 // 5 minutes
+    private static final String LIMP_UPDATE_PHRASE = "Detecting a limp on your ";
+
+    /***********************************************************************************************
+     * Activity Functions
+     **********************************************************************************************/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_live_session);
-        toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (!bluetoothAdapter.isEnabled()) {
-            Log.d(TAG, "Enabling bluetooth");
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }else{
-            enableGaitService();
-        }
+        // Create a new gait session
+        gaitSessionAnalyzer = new GaitSessionAnalyzer();
 
-        // Start a timer to restart everything if we dont connect within 5 seconds
-        handler = new Handler();
-        handler.postDelayed(connectionCheck,5000);
+        // Create new Trendelenburg detector for the session
+        trendelenburgDetector = new TrendelenburgDetector(getApplicationContext(), this);
 
-        layoutWaitScreen =  findViewById(R.id.layoutWaitScreen);
-        layoutReadyScreen = findViewById(R.id.layoutReadyScreen);
+        // Build and start the anklets for the session
+        initAnklets();
 
-        // Get access to all the buttons
-        startButton = (Button) findViewById(R.id.start_button);
-        endButton = (Button) findViewById(R.id.end_button);
-        pauseButton = (Button) findViewById(R.id.pause_button);
+        // Access UI Components
+        startButton = (FloatingActionButton) findViewById(R.id.start_button);
+        countDownText =   (TextView) findViewById(R.id.countDownText);
+        connectingOverlay = findViewById(R.id.layoutConnectingScreen);
+        countDownOverlay = findViewById(R.id.layoutTimeLeftScreen);
+        timeLeftText = (TextView)findViewById(R.id.timeLeftText);
+
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setIndeterminate(false);
+        progressBar.setProgress(0);
+
+        // Create the Count Down Timer for the session.
+        initSessionTimer();
+        SYSTEM_STATE = SYSTEM_INIT;
+        updatesSaved = 0;
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "start button click");
-                gaitService.startSystem();
-                chronometer.setBase(SystemClock.elapsedRealtime());
-                chronometer.start();
-                final String text = "RUNNING";
-                startButton.setText(text);
-                startButton.setEnabled(false);
+
+                if(SYSTEM_STATE == SYSTEM_RUNNING){
+                    Log.d(TAG, "done button click");
+
+                    startSessionReview();
+                }else if(SYSTEM_STATE == SYSTEM_INIT){
+                    Log.d(TAG, "start button click");
+                    startButton.setImageResource(R.drawable.ic_stop_white_24px);
+                    showCountDownTillStart();
+                }
             }
         });
 
-        endButton.setOnClickListener(new View.OnClickListener() {
+        // Prevent the device from going to sleep for the duration of the session, but allow screen to turn off :)
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
+        wakeLock.acquire();
+
+        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
-            public void onClick(View view) {
-                Log.d(TAG, "end button click");
-                gaitService.stopSystem();
-                chronometer.stop();
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
             }
         });
-
-        pauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "pause button click");
-                gaitService.stopSystem();
-                chronometer.stop();
-            }
-        });
-
-        chronometer = (Chronometer) findViewById(R.id.chronometer);
-
-    }
-
-    public void startSessionReview()
-    {
-        startActivity(new Intent(this, SessionReviewActivity.class));
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onDestroy() {
+    protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy()");
-        if(gaitService != null)
-            shutdownGS();
 
+        shutdownSystem();
     }
 
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "onStop");
-        super.onStop();
-    }
+    public void startSessionReview() {
+        Log.d(TAG,"Starting Session Review");
 
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(TAG, "onRestart");
-    }
+        Intent reviewIntent = new Intent(this, SessionReviewActivity.class);
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
+        reviewIntent.putExtra("JSON_SESSION_STRING", gaitSessionAnalyzer.toJSON().toString());
 
-    }
-
-    private ServiceConnection gaitServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            gaitService = ((GaitService.MyLocalBinder)iBinder).getService();
-            Log.d(TAG, "onServiceConnected GaitService= " + gaitService);
-
-            if (!gaitService.initialize()) {
-                Log.e(TAG, "Unable to initialize Gait Service");
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            gaitService = null;
-        }
-    };
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-
-            case REQUEST_ENABLE_BT:
-                // When the request to enable Bluetooth returns
-                if (resultCode == Activity.RESULT_OK) {
-                    Toast.makeText(this, "Bluetooth has turned on ", Toast.LENGTH_SHORT).show();
-                    enableGaitService();
-                } else {
-                    // User did not enable Bluetooth or an error occurred
-                    Log.d(TAG, "BT not enabled");
-                    Toast.makeText(this, "Problem in BT Turning ON ", Toast.LENGTH_SHORT).show();
-                    //finish();
-                }
-                break;
-            default:
-                Log.e(TAG, "wrong request code");
-                break;
-        }
-    }
-
-    private void enableGaitService(){
-        Intent bindIntent = new Intent(this, GaitService.class);
-        bindService(bindIntent, gaitServiceConnection, Context.BIND_AUTO_CREATE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(gaitReciever, makeGaitIntentFilter());
-    }
-
-    private void shutdownGS()
-    {
-
-        try {
-            //LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
-        } catch (Exception ignore) {
-            Log.e(TAG, ignore.toString());
-        }
-        unbindService(gaitServiceConnection);
-        gaitService.stopSelf();
-        gaitService = null;
-    }
-    private IntentFilter makeGaitIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(GaitService.ACTION_ANKLETS_READY);
-        intentFilter.addAction(GaitService.ACTION_STEP_MESSAGEL);
-        intentFilter.addAction(GaitService.ACTION_STEP_MESSAGER);
-        return intentFilter;
-    }
-
-    private final BroadcastReceiver gaitReciever = new BroadcastReceiver() {
-
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            //*********************//
-            if (action.equals(GaitService.ACTION_ANKLETS_READY)) {
-
-                Log.d(TAG, "Gait Service says its ready to go!");
-
-                // Change the UI
-                layoutWaitScreen.setVisibility(View.GONE);
-                layoutReadyScreen.setVisibility(View.VISIBLE);
-            }
-            //*********************//
-            if (action.equals(GaitService.ACTION_STEP_MESSAGEL)){
-                Log.d(TAG, "Left anklet step detection");
-
-            }
-            //*********************//
-            if (action.equals(GaitService.ACTION_STEP_MESSAGER)) {
-
-                Log.d(TAG, "Right anklet step detection");
-
-            }
-        }
-    };
-
-    private TimerTask connectionCheck = new TimerTask() {
-        @Override
-        public void run() {
-            if(!system_ready)
-            {
-                // Destroy the GaitService and retry everything
-                Log.d(TAG, "Failed to connect anklets");
-                shutdownGS();
-                showDialog();
-            }
-        }
-    };
-
-    void showDialog() {
-        DialogFragment newFragment = new ReconnectFragment();
-        newFragment.show(getFragmentManager(), "dialog");
-    }
-
-    @Override
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        // Restart the gait service
-        enableGaitService();
-        handler.postDelayed(connectionCheck, 5000);
-    }
-
-    @Override
-    public void onDialogNegativeClick(DialogFragment dialog) {
-        // Go back to the main Activity
+        startActivity(reviewIntent);
         finish();
     }
+
+    public void startSystem(){
+        Log.d(TAG, "startSystem()");
+
+        sessionTimer.start();
+        trendelenburgDetector.start();
+        leftAnklet.sendStart();
+        rightAnklet.sendStart();
+        leftAnklet.activate();
+        rightAnklet.activate();
+        SYSTEM_STATE = SYSTEM_RUNNING;
+        handler.postDelayed(monitorGait,LIMP_UPDATE_INTERVAL);
+    }
+
+    public void shutdownSystem(){
+        Log.d(TAG, "shutdownSystem()");
+
+        sessionTimer.cancel();
+        trendelenburgDetector.Shutdown();
+
+        // Terminate the session successfully
+        leftAnklet.shutdown();
+        rightAnklet.shutdown();
+
+        handler.removeCallbacksAndMessages(null);
+
+        if(textToSpeech !=null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+
+        // Release our wake lock ASAP
+        if(wakeLock != null)
+            wakeLock.release();
+        wakeLock = null;
+    }
+
+    public void initSessionTimer(){
+
+        sessionTimer =  new CountDownTimer(SESSION_TIME, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+
+                if(SYSTEM_STATE != SYSTEM_RUNNING){
+                    this.onFinish();
+                }
+
+                String v = String.format(Locale.US,"%02d", millisUntilFinished/60000);
+                int va = (int)( (millisUntilFinished%60000)/1000);
+                countDownText.setText(v+":"+String.format(Locale.US,"%02d",va));
+                double percentDone = 1.0-((double)millisUntilFinished / 300000);
+                int progress = (int) (percentDone*100);
+                progressBar.setProgress(progress);
+            }
+
+            public void onFinish() {
+                countDownText.setText("Done!");
+                shutdownSystem();
+                startSessionReview();
+            }
+        };
+    }
+
+    public void initAnklets(){
+
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
+
+        leftAnklet = new BluetoothAnklet(LEFT_ANKLET_ADDRESS, 'L', mBluetoothAdapter, this);
+        rightAnklet = new BluetoothAnklet(RIGHT_ANKLET_ADDRESS,'R', mBluetoothAdapter,this);
+    }
+
+    public void showCountDownTillStart(){
+
+        countDownOverlay.setVisibility(View.VISIBLE);
+        new CountDownTimer(COUNT_DOWN_TIME, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                String timeLeft = String.valueOf(millisUntilFinished/1000);
+                timeLeftText.setText(timeLeft);
+                textToSpeech.speak(timeLeft, TextToSpeech.QUEUE_FLUSH,null,null);
+            }
+
+            @Override
+            public void onFinish() {
+                countDownOverlay.setVisibility(View.GONE);
+                textToSpeech.speak("Session Starting Now", TextToSpeech.QUEUE_FLUSH,null,null);
+                startSystem();
+            }
+        }.start();
+    }
+
+    @Override
+    public void onAnkletReady(char ankletId) {
+        if(leftAnklet.isConnected() && rightAnklet.isConnected()){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    connectingOverlay.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onAnkletFailure(char ankletID) {
+
+    }
+
+
+    /***********************************************************************************************
+     * Gait Logic
+     **********************************************************************************************/
+
+    @Override
+    public void onTrendelenburgEvent() {
+        Log.d(TAG, "Trend Spike Detected!");
+        gaitSessionAnalyzer.incrementTrendel();
+    }
+
+    Runnable monitorGait = new Runnable() {
+        @Override
+        public void run() {
+            Log.d(TAG,"----------Taking GaitSessionAnalyzer Snapshot---------");
+            updatesSaved += 1;
+            String limpPhrase = gaitSessionAnalyzer.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
+            Integer score = gaitSessionAnalyzer.takeScoreSnapshot();
+            if(limpPhrase != null){
+                textToSpeech.speak(LIMP_UPDATE_PHRASE + limpPhrase + "leg.", TextToSpeech.QUEUE_ADD,null,null);
+            }
+            if(updatesSaved % 4 == 0){
+                int minLeft = 5 - (updatesSaved / 4);
+                textToSpeech.speak( minLeft + " minutes remaining." , TextToSpeech.QUEUE_ADD,null,null);
+            }
+            handler.postDelayed(this,LIMP_UPDATE_INTERVAL);
+        }
+    };
 
 }

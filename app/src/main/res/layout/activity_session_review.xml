@@ -5,78 +5,192 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="edu.mtu.team9.aspirus.LiveSessionActivity">
-
-    <include
-        android:id="@+id/tool_bar"
-        layout="@layout/tool_bar"
-        />
+    tools:context="edu.mtu.team9.aspirus.LiveSessionActivity"
+    android:layout_margin="@dimen/activity_horizontal_margin">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/tool_bar">
-
+        android:scrollIndicators="none"
+        android:scrollbars="none"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible"
-            android:id="@+id/layoutReadyScreen"
-            >
+            android:gravity="center_horizontal">
 
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="10dp">
 
-            <TextView
-                android:text="Score"
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <TextView
+                    android:text="@string/score_overall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                        android:textAppearance="@android:style/TextAppearance.Material.Display2"
+                    android:textAlignment="center"
+                        android:textColor="@android:color/white" />
+
+                    <TextView
+                    android:text="00"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/finalScoreText"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                    android:textAlignment="center"
+                        android:textColor="@android:color/white" />
+
+                </LinearLayout>
+
+                <View style="@style/Divider"/>
+
+                <TextView
+                    android:text="@string/score_review_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textAlignment="center"
+                    android:textSize="24sp" />
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:paddingTop="5dp" />
+
+                <TextView
+                    android:text="@string/score_review_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
+            </LinearLayout>
+
+            <View style="@style/Divider"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:layout_marginBottom="5dp">
+
+                <TextView
+                    android:text="@string/limp_review_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textAlignment="center"
+                    android:textSize="24sp" />
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pieChart"
+                    android:layout_weight=".5"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp" />
+
+                <TextView
+                    android:text="@string/limp_review_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
+            </LinearLayout>
+
+            <View style="@style/Divider"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:layout_marginBottom="5dp">
+
+                <TextView
+                    android:text="@string/trend_review_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textAlignment="center"
+                    android:textSize="24sp" />
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <com.github.lzyzsd.circleprogress.DonutProgress
+                        android:id="@+id/donut_progress"
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
+                        app:donut_progress="10"
+                        app:donut_finished_color="@color/blue"
+                        app:donut_text_color="@android:color/white"
+                        app:donut_unfinished_stroke_width="4dp"
+                        app:donut_unfinished_color="@android:color/white"/>
+                </FrameLayout>
+
+                <TextView
+                    android:text="@string/trend_review_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
+
+            </LinearLayout>
+
+            <View style="@style/Divider"/>
+
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/textView"
-                android:textAppearance="@android:style/TextAppearance.Material.Display1"
-                android:textAlignment="center" />
+                android:gravity="center">
 
-            <mobi.gspd.segmentedbarview.SegmentedBarView
-                android:id="@+id/bar_view"
+                <TextView
+                    android:text="@string/good_score_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    android:textAlignment="center" />
+
+                <TextView
+                    android:text="@string/good_score_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                    android:textSize="18sp"
+                    android:textAlignment="textStart" />
+            </LinearLayout>
+
+            <android.support.design.widget.FloatingActionButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="20dp"
-                app:sbv_empty_segment_text="No segments"
-                app:sbv_segment_gap_width="5dp"
-                app:sbv_segment_text_size="28sp"
-                app:sbv_show_description_text="true"
-                app:sbv_side_style="rounded"
-                app:sbv_side_text_style="twoSided"
-                app:sbv_value_sign_height="50dp"
-                app:sbv_value_sign_round="8dp"
-                app:sbv_value_sign_width="30dp"
-                app:sbv_bar_height="35dp"
-                />
-
-            <com.intrusoft.scatter.PieChart
-                android:id="@+id/pie_chart"
-                android:layout_width="300dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_height="300dp"
-                app:aboutChart="Leg Breakdown"
-                app:aboutTextSize="40"
-                app:equalPartition="false"
-                app:centerColor="@color/colorAccent"
-                />
-
-            <Button
-                android:text="Done"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/done_button"
-                style="@android:style/Widget.Material.Light.Button"
-                android:background="@android:color/holo_green_dark"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_margin="20dp" />
+                android:clickable="true"
+                app:fabSize="mini"
+                app:srcCompat="@drawable/ic_done_white_24px"
+                android:id="@+id/doneButton"
+                app:backgroundTint="@color/green"
+                android:layout_margin="@dimen/fab_margin"
+                android:scaleType="center"/>
 
         </LinearLayout>
+
+
     </ScrollView>
-
-
 
 </RelativeLayout>

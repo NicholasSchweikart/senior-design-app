@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3f9537</color>
+    <color name="colorPrimary">#4caf50</color>
     <color name="colorPrimaryDark">#2e8326</color>
-    <color name="colorAccent">#81b471</color>
+    <color name="colorAccent">#66bb6a</color>
+
+    <item name="blue" type="color">#33b5e5</item>
+    <item name="green" type="color">#99cc00</item>
+    <color name="statusBarColor">#33200000</color>
+
 </resources>
