@@ -16,7 +16,13 @@
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/mainChart"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="250dp"
         android:layout_below="@+id/tool_bar"/>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/mainChart"
+        android:id="@+id/sessionsListView"/>
 
 </RelativeLayout>

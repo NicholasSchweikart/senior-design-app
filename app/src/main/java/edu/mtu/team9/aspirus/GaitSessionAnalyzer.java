@@ -30,7 +30,7 @@ public class GaitSessionAnalyzer {
     private ArrayList<Integer> scores;
     private ArrayList<Double> leftData, rightData;
     private int totalTrendelenburgEvents,
-            totalSamples,
+            totalScoresSaved,
             trendelPositiveSamples;
     private int currentLimpPercent;
 
@@ -42,7 +42,7 @@ public class GaitSessionAnalyzer {
         rightData = new ArrayList<Double>();
         currentLimpPercent = 0;
         totalTrendelenburgEvents = 0;
-        totalSamples = 0;
+        totalScoresSaved = 0;
     }
 
     public String updateLimpStatus(Double leftAcceleration, Double rightAcceleration){
@@ -71,9 +71,13 @@ public class GaitSessionAnalyzer {
         return null;
     }
 
+    /**
+     * Takes a snap shot score derived from the last 15 seconds of data accumulation.
+     * @return the score value in the range 0 to 100;
+     */
     public Integer takeScoreSnapshot(){
 
-        totalSamples += 1;                              // Increment total samples taken
+        totalScoresSaved += 1;                          // Increment total scores saved
 
         Integer trendScore = 50;                        // Max of 50 points
         if(totalTrendelenburgEvents >= TR_BAD_THRESH)   // Trigger point reduction at threshold
@@ -83,7 +87,9 @@ public class GaitSessionAnalyzer {
             if(trendScore < 0)
                 trendScore = 0;                         // Minimum of zero
         }
-        int limpScore = 50-(50 - currentLimpPercent) * 5;
+
+        // Limpscore = 50% ideal - current% x 5 percent per step => all subtracted from 50 possible
+        Integer limpScore = 50 - (50 - currentLimpPercent) * 5;
         if(limpScore < 0)
             limpScore = 0;
         Integer score =  limpScore + trendScore;
@@ -112,12 +118,12 @@ public class GaitSessionAnalyzer {
             JSONArray scoresArray = new JSONArray();
             sessionData.put("date", Calendar.getInstance().getTime());
 
-            int trendelPercentage = getTrendelenburgPercentage();
+            int trendelPercentage = getFinalTrendelenburgPercentage();
             sessionData.put("trendelenburg_percentage", trendelPercentage);
             int finalTrendelScore = (int)(50*(trendelPercentage/100.0));
             sessionData.put("trendelenburg_score", finalTrendelScore);
 
-            int[] lb = getLimpBreakdown();
+            int[] lb = getFinalLimpBreakdown();
             sessionData.put("left_leg_percent", lb[0]);
             sessionData.put("right_leg_percent", lb[1]);
             sessionData.put("leg_score", lb[2]);
@@ -136,17 +142,13 @@ public class GaitSessionAnalyzer {
         }
     }
 
-    public ArrayList<Integer> getScores(){
-        return this.scores;
-    }
-
     /**
      *  Calculates the percentage of Trendelenburg positive samples compared to the total number of
      *  windows. Then subtracts this from 100%.
      * @return 100% - percent Trendelenburg positive samples
      */
-    private int getTrendelenburgPercentage(){
-        int scoreOut = (int)((double)trendelPositiveSamples/totalSamples*100.0);
+    private int getFinalTrendelenburgPercentage(){
+        int scoreOut = (int)((double)trendelPositiveSamples/ totalScoresSaved *100.0);
         scoreOut = 100 - scoreOut;
         Log.d(TAG,"Final Trendelenburg Percentage: " + scoreOut);
         return scoreOut;
@@ -156,25 +158,37 @@ public class GaitSessionAnalyzer {
      * Calculates the average acceleration values on each leg for the hole session.
      * @return  the percent of effort on each leg averaged over the whole session.
      */
-    private int[] getLimpBreakdown(){
+    private int[] getFinalLimpBreakdown(){
         int[] out = new int[3];
         double left = 0.0, right = 0.0;
+
+        // Calculate for both at the same time; as they will never be different lengths
         int totalValues = leftData.size();
         for (int i = 0; i < totalValues; i++){
             left += leftData.get(i);
             right += rightData.get(i);
         }
+
+        // Extract the average value from the sum.
         left /= totalValues;
         right /= totalValues;
+
+        // Calculate the percentage on the left leg arbitraraly.
         out[0] =  (int)((left)/(right+left)*100);
+
+        // Get the right leg percentage by subtracting left from 100.
+        // Snap to 50:50 if there is no diff.
         out[1] = 100 - out[0];
         if(out[1] == 100 || out[0] == 100){
             out[0] = 50;
             out[1] = 50;
         }
+
+        // The last value in the output is the points recieved from limping.
         out[2] = 50-(Math.abs(out[0] - out[1])*5);
         if(out[2]<0)
             out[2] = 0;
+
         Log.d(TAG,"Limp Breakdown: LEFT = " + out[0] + " RIGHT = " + out[1] + "Overall = " + out[2]);
         return out;
     }

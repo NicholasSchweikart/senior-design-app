@@ -1,5 +1,6 @@
 package edu.mtu.team9.aspirus;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v4.app.NavUtils;
@@ -9,6 +10,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -24,6 +28,10 @@ public class PerformanceReviewActivity extends AppCompatActivity {
     public static final String TAG = "performance-review:";
     private SessionFileUtility sessionFileUtility;
     private LineChart lineChart;
+    private LineData mainChartLineData;
+    private ListView sessionsListView;
+    private SessionListViewAdapter sessionListViewAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,21 +40,23 @@ public class PerformanceReviewActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        sessionsListView = (ListView)findViewById(R.id.sessionsListView);
+
         // Find the Charts in the XML, then fill with data.
         lineChart = (LineChart) findViewById(R.id.mainChart);
 
         // Format the charts initially
         formatLineChart(lineChart);
 
-        // load in the sessions data file; report sent to callback.
+        // load in the sessions data file asynchronously
         sessionFileUtility = new SessionFileUtility(this);
         new populateDashboard().execute();
     }
 
-    private class populateDashboard extends AsyncTask<Void, Void, FinalSession>{
+    private class populateDashboard extends AsyncTask<Void, Void, Boolean>{
 
         @Override
-        protected FinalSession doInBackground(Void...voids) {
+        protected Boolean doInBackground(Void...voids) {
 
             // Load in the file data.
             if(!sessionFileUtility.getSessionsData()){
@@ -55,6 +65,9 @@ public class PerformanceReviewActivity extends AppCompatActivity {
             }
 
             ArrayList<SessionFromJSONString> allSessions = sessionFileUtility.getSessionsArrayLists();
+            if(allSessions.size()==0)
+                return false;
+
             List<Entry> entriesScores = new ArrayList<Entry>();
             List<Entry> entriesLeg = new ArrayList<Entry>();
             List<Entry> entriesTrendel = new ArrayList<Entry>();
@@ -66,31 +79,53 @@ public class PerformanceReviewActivity extends AppCompatActivity {
                 i+=1;
             }
 
-            LineData lineData1 = new LineData();
+            mainChartLineData = new LineData();
 
             LineDataSet scores = new LineDataSet(entriesScores,"Session Score");
             formatLineDataSetScores(scores);
-            lineData1.addDataSet(scores);
+            mainChartLineData.addDataSet(scores);
 
             LineDataSet trendel = new LineDataSet(entriesTrendel,"Trendelenburg Score");
             formatLineDataSetTrendel(trendel);
-            lineData1.addDataSet(trendel);
+            mainChartLineData.addDataSet(trendel);
 
             LineDataSet leg = new LineDataSet(entriesLeg,"Limp Score");
             formatLineDataSetLimp(leg);
-            lineData1.addDataSet(leg);
+            mainChartLineData.addDataSet(leg);
 
-            return new FinalSession(lineData1);
+            return true;
         }
 
         @Override
-        protected void onPostExecute(FinalSession rslt){
-            lineChart.setData(rslt.dataSet);
+        protected void onPostExecute(Boolean loaded){
+
+            // Ensure that we actually loaded data into the data set before building chart.
+            if(!loaded){
+                Log.e(TAG,"Error loading data file, may be empty.");
+                return;
+            }
+
+            lineChart.setData(mainChartLineData);
             lineChart.invalidate();
             lineChart.setVisibleXRangeMaximum(14);  // Show up to 14 sessions at a time
+
+            // Build the list of sessions
+            sessionListViewAdapter = new SessionListViewAdapter(getApplicationContext(),sessionFileUtility.getSessionsArrayLists());
+            sessionsListView.setAdapter(sessionListViewAdapter);
+            sessionsListView.setOnItemClickListener(itemClickListener);
         }
     }
 
+    private AdapterView.OnItemClickListener itemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Log.d(TAG, "Item Clicked");
+            SessionFromJSONString session = (SessionFromJSONString) sessionsListView.getItemAtPosition(position);
+            Intent i = new Intent(getApplicationContext(),SessionInDetailActivity.class);
+            i.putExtra("JSON_SESSION_STRING", session.toJSON().toString());
+            startActivity(i);
+        }
+    };
     @Override
     public void onDestroy() {
         super.onDestroy();

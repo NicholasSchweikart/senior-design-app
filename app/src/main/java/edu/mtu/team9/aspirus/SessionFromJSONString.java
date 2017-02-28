@@ -24,7 +24,7 @@ public class SessionFromJSONString {
     private int left_leg_percent, right_leg_percent, leg_score, trendelenburg_percentage, trendelenburg_score, final_score;
     private JSONObject jsonSession;
     private LineDataSet lineDataSet = null;
-
+    private String date;
     SessionFromJSONString(String jsonSessionString){
 
         List<Entry> entries = new ArrayList<Entry>();
@@ -44,6 +44,7 @@ public class SessionFromJSONString {
             trendelenburg_score = jsonSession.getInt("trendelenburg_score");
             trendelenburg_percentage = jsonSession.getInt("trendelenburg_percentage");
             final_score = jsonSession.getInt("final_score");
+            date = jsonSession.getString("date");
         }catch (JSONException e){
             Log.e(TAG,"Error parsing JSON");
         }
@@ -71,4 +72,5 @@ public class SessionFromJSONString {
         return trendelenburg_percentage;
     }
     public LineDataSet getScoresLineDataSet(){return lineDataSet;}
+    public String getDate(){return this.date;}
 }

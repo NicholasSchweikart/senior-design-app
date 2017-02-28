@@ -86,6 +86,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="edu.mtu.team9.aspirus.MainActivity" />
         </activity>
+        <activity
+            android:name=".SessionInDetailActivity"
+            android:parentActivityName=".PerformanceReviewActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:label="Session Breakdown">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="edu.mtu.team9.aspirus.PerformanceReviewActivity" />
+        </activity>
     </application>
 
 </manifest>
