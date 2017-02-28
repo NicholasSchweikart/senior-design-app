@@ -9,21 +9,29 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-/**
- * Created for Aspirus2
- * By: nicholas on 2/10/17.
- * Description:
- */
 
+/**
+ *  Created by Nicholas Schweikart, CPE, for Biomedical Senior Design Team 9
+ *  Contact: nsschwei@mtu.edu
+ *
+ *  This class contains all the logic necessary to analyze the stream of data coming from both
+ *  the anklets, as well as the Trendelenburg Detector.
+ */
 public class GaitSessionAnalyzer {
+
     private final String TAG = "gait-session-analyzer";
 
-    private static final int TR_BAD_THRESH = 4;
+    // System Control Vars
+    private static final int
+            TR_BAD_THRESH = 4,
+            LIMP_PERCENT_THRESHOLD = 47;
 
     // Gait Metric Variables
     private ArrayList<Integer> scores;
     private ArrayList<Double> leftData, rightData;
-    private int totalTrendelenburgEvents, totalSamples, trendelPositiveSamples;
+    private int totalTrendelenburgEvents,
+            totalSamples,
+            trendelPositiveSamples;
     private int currentLimpPercent;
 
     GaitSessionAnalyzer(){
@@ -35,17 +43,16 @@ public class GaitSessionAnalyzer {
         currentLimpPercent = 0;
         totalTrendelenburgEvents = 0;
         totalSamples = 0;
-
     }
 
     public String updateLimpStatus(Double leftAcceleration, Double rightAcceleration){
+
         String outputLimp = null;
 
-        //Push into list for later
-        leftData.add(leftAcceleration);
+        leftData.add(leftAcceleration);     // Save the acceleration data for final score later.
         rightData.add(rightAcceleration);
 
-        // Find the difference in limp
+        // Find the percent difference in limp.
         if(leftAcceleration < rightAcceleration){
             currentLimpPercent = (int)((leftAcceleration)/(rightAcceleration+leftAcceleration)*100);
             outputLimp = "left";
@@ -55,9 +62,10 @@ public class GaitSessionAnalyzer {
             outputLimp = "right";
         }
 
-        Log.d(TAG,"Right Avg = " + rightAcceleration + " Left Avg = " + leftAcceleration + "Update Limp Status: " + currentLimpPercent);
+        Log.d(TAG,"Right Avg = " + rightAcceleration + " Left Avg = " + leftAcceleration + " Limp Value = " + currentLimpPercent + '%');
 
-        if(currentLimpPercent < 47){
+        // Trigger a limp warning if we our outside the normal threshold.
+        if(currentLimpPercent < LIMP_PERCENT_THRESHOLD){
             return outputLimp;
         }
         return null;
@@ -65,7 +73,7 @@ public class GaitSessionAnalyzer {
 
     public Integer takeScoreSnapshot(){
 
-        totalSamples += 1;
+        totalSamples += 1;                              // Increment total samples taken
 
         Integer trendScore = 50;                        // Max of 50 points
         if(totalTrendelenburgEvents >= TR_BAD_THRESH)   // Trigger point reduction at threshold
@@ -76,7 +84,7 @@ public class GaitSessionAnalyzer {
                 trendScore = 0;                         // Minimum of zero
         }
         int limpScore = 50-(50 - currentLimpPercent) * 5;
-        if(limpScore<0)
+        if(limpScore < 0)
             limpScore = 0;
         Integer score =  limpScore + trendScore;
         scores.add(score);
@@ -87,11 +95,17 @@ public class GaitSessionAnalyzer {
         return score;
     }
 
+    /**
+     *  Increments the number of trendelenburg events detected for this session window.
+     */
     public void incrementTrendel(){
         totalTrendelenburgEvents+=1;
     }
 
-
+    /**
+     *  Converts the gait session data to a JSON object for easy passing as string.
+     * @return JSON object of the gait session
+     */
     public JSONObject toJSON(){
         try {
             JSONObject sessionData = new JSONObject("{}");
@@ -126,6 +140,11 @@ public class GaitSessionAnalyzer {
         return this.scores;
     }
 
+    /**
+     *  Calculates the percentage of Trendelenburg positive samples compared to the total number of
+     *  windows. Then subtracts this from 100%.
+     * @return 100% - percent Trendelenburg positive samples
+     */
     private int getTrendelenburgPercentage(){
         int scoreOut = (int)((double)trendelPositiveSamples/totalSamples*100.0);
         scoreOut = 100 - scoreOut;

@@ -22,8 +22,8 @@ import java.util.Locale;
 
 public class LiveSessionActivity extends AppCompatActivity implements TrendelenburgDetector.TrendelenburgEventListener,BluetoothAnklet.AnkletListener {
 
-
     public static final String TAG = "Live-Session";
+    //TODO migrate this to a preference setting import rather than a hardcoded field.
     private static final String RIGHT_ANKLET_ADDRESS= "98:D3:34:90:DC:D0";
     private static final String LEFT_ANKLET_ADDRESS = "98:D3:36:00:B3:22";
 
@@ -39,21 +39,20 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
     private GaitSessionAnalyzer gaitSessionAnalyzer;
     private CountDownTimer sessionTimer;
     private Handler handler = new Handler();
-    PowerManager.WakeLock wakeLock;
-    TextToSpeech textToSpeech;
+    private PowerManager.WakeLock wakeLock;
+    private TextToSpeech textToSpeech;
 
     // Control Variables
     private static final int
             SYSTEM_INIT = 0,
             SYSTEM_RUNNING = 1;
-    private int SYSTEM_STATE;
+    private int SYSTEM_STATE, updatesSaved;
 
     // Constants
     private static final int LIMP_UPDATE_INTERVAL = 15000;          // 30 seconds
     private static final int COUNT_DOWN_TIME = 10000;               // 10 seconds
     private static final int SESSION_TIME = 300000;                 // 5 minutes
     private static final String LIMP_UPDATE_PHRASE = "Detecting a limp on your ";
-    private static final String SCORE_UPDATE_PHRASE = "Your current score is ";
 
     /***********************************************************************************************
      * Activity Functions
@@ -89,6 +88,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         // Create the Count Down Timer for the session.
         initSessionTimer();
         SYSTEM_STATE = SYSTEM_INIT;
+        updatesSaved = 0;
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,7 +102,6 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
                     Log.d(TAG, "start button click");
                     startButton.setImageResource(R.drawable.ic_stop_white_24px);
                     showCountDownTillStart();
-                    handler.postDelayed(startSystem, COUNT_DOWN_TIME);
                 }
             }
         });
@@ -128,32 +127,6 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         Log.d(TAG, "onDestroy()");
 
         shutdownSystem();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart()");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop");
-
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(TAG, "onRestart");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-
     }
 
     public void startSessionReview() {
@@ -254,6 +227,7 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
             public void onFinish() {
                 countDownOverlay.setVisibility(View.GONE);
                 textToSpeech.speak("Session Starting Now", TextToSpeech.QUEUE_FLUSH,null,null);
+                startSystem();
             }
         }.start();
     }
@@ -290,22 +264,18 @@ public class LiveSessionActivity extends AppCompatActivity implements Trendelenb
         @Override
         public void run() {
             Log.d(TAG,"----------Taking GaitSessionAnalyzer Snapshot---------");
+            updatesSaved += 1;
             String limpPhrase = gaitSessionAnalyzer.updateLimpStatus(leftAnklet.getAvgAcceleration(),rightAnklet.getAvgAcceleration());
             Integer score = gaitSessionAnalyzer.takeScoreSnapshot();
             if(limpPhrase != null){
-                textToSpeech.speak(LIMP_UPDATE_PHRASE + limpPhrase + "leg. " + SCORE_UPDATE_PHRASE + score, TextToSpeech.QUEUE_FLUSH,null,null);
-            }else{
-                textToSpeech.speak(SCORE_UPDATE_PHRASE + score, TextToSpeech.QUEUE_FLUSH,null,null);
+                textToSpeech.speak(LIMP_UPDATE_PHRASE + limpPhrase + "leg.", TextToSpeech.QUEUE_ADD,null,null);
+            }
+            if(updatesSaved % 4 == 0){
+                int minLeft = 5 - (updatesSaved / 4);
+                textToSpeech.speak( minLeft + " minutes remaining." , TextToSpeech.QUEUE_ADD,null,null);
             }
             handler.postDelayed(this,LIMP_UPDATE_INTERVAL);
         }
     };
 
-    Runnable startSystem = new Runnable() {
-
-        @Override
-        public void run() {
-            startSystem();
-        }
-    };
 }
