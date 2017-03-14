@@ -29,25 +29,32 @@ public class GaitSessionAnalyzer {
     // Gait Metric Variables
     private ArrayList<Integer> scores;
     private ArrayList<Double> leftData, rightData;
-    private int totalTrendelenburgEvents,
+    private int
+            totalTrendelenburgEvents,
             totalScoresSaved,
-            trendelPositiveSamples;
-    private int currentLimpPercent;
+            trendelPositiveSamples,
+            currentLimpPercent;
 
-    GaitSessionAnalyzer(){
+    public GaitSessionAnalyzer(){
 
         // Create list to hold score values
-        scores = new ArrayList<Integer>();
-        leftData = new ArrayList<Double>();
-        rightData = new ArrayList<Double>();
+        scores = new ArrayList<>();
+        leftData = new ArrayList<>();
+        rightData = new ArrayList<>();
         currentLimpPercent = 0;
         totalTrendelenburgEvents = 0;
         totalScoresSaved = 0;
     }
 
+    /**
+     *  Updates the current limp value by looking at the input accelerations.
+     * @param leftAcceleration  acceleration from left anklet (m/s^2)
+     * @param rightAcceleration acceleration from right anklet (m/s^2)
+     * @return  "Left" or "Right" if a limp is detected, null otherwise.
+     */
     public String updateLimpStatus(Double leftAcceleration, Double rightAcceleration){
 
-        String outputLimp = null;
+        String outputLimp;
 
         leftData.add(leftAcceleration);     // Save the acceleration data for final score later.
         rightData.add(rightAcceleration);
@@ -68,6 +75,7 @@ public class GaitSessionAnalyzer {
         if(currentLimpPercent < LIMP_PERCENT_THRESHOLD){
             return outputLimp;
         }
+
         return null;
     }
 
@@ -110,31 +118,37 @@ public class GaitSessionAnalyzer {
 
     /**
      *  Converts the gait session data to a JSON object for easy passing as string.
-     * @return JSON object of the gait session
+     * @return JSON object comprised of the gait session data.
      */
     public JSONObject toJSON(){
         try {
             JSONObject sessionData = new JSONObject("{}");
             JSONArray scoresArray = new JSONArray();
+
+            // Tag this run with a date time stamp.
             sessionData.put("date", Calendar.getInstance().getTime());
 
+            // Insert the trendelenburg percentage as well as final trendelenburg score.
             int trendelPercentage = getFinalTrendelenburgPercentage();
             sessionData.put("trendelenburg_percentage", trendelPercentage);
             int finalTrendelScore = (int)(50*(trendelPercentage/100.0));
             sessionData.put("trendelenburg_score", finalTrendelScore);
 
+            // Get the final limp breakdown for each leg, then insert.
             int[] lb = getFinalLimpBreakdown();
             sessionData.put("left_leg_percent", lb[0]);
             sessionData.put("right_leg_percent", lb[1]);
             sessionData.put("leg_score", lb[2]);
 
+            // Also append the final score.
             sessionData.put("final_score", lb[2] + finalTrendelScore);
 
+            // Populate the scores array with all of the scores recorded throughout the session.
             for (Integer score : scores) {
                 scoresArray.put(score);
             }
-
             sessionData.put("scores_array", scoresArray);
+
             return sessionData;
         } catch (JSONException e) {
             Log.e(TAG,"Error parsing to json");

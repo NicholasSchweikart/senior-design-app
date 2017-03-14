@@ -1,195 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="@dimen/activity_horizontal_margin"
     android:fitsSystemWindows="true"
-    tools:context="edu.mtu.team9.aspirus.LiveSessionActivity"
-    android:layout_margin="@dimen/activity_horizontal_margin">
+    android:scrollIndicators="none"
+    android:scrollbars="none"
+    tools:context="edu.mtu.team9.aspirus.activities.LiveSessionActivity">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollIndicators="none"
-        android:scrollbars="none"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true">
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="visible">
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="visible"
-            android:gravity="center_horizontal">
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp"
+            android:orientation="vertical">
 
             <LinearLayout
-                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginBottom="10dp">
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:orientation="vertical"
+                <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                    <TextView
+                    android:layout_height="wrap_content"
                     android:text="@string/score_overall"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                        android:textAppearance="@android:style/TextAppearance.Material.Display2"
                     android:textAlignment="center"
-                        android:textColor="@android:color/white" />
+                    android:textAppearance="@android:style/TextAppearance.Material.Display2"
+                    android:textColor="@android:color/white" />
 
-                    <TextView
-                    android:text="00"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                <TextView
                     android:id="@+id/finalScoreText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="00"
+                    android:textAlignment="center"
                     android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-                    android:textAlignment="center"
-                        android:textColor="@android:color/white" />
+                    android:textColor="@android:color/white" />
 
-                </LinearLayout>
-
-                <View style="@style/Divider"/>
-
-                <TextView
-                    android:text="@string/score_review_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textAlignment="center"
-                    android:textSize="24sp" />
-
-                <com.github.mikephil.charting.charts.LineChart
-                    android:id="@+id/chart"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:paddingTop="5dp" />
-
-                <TextView
-                    android:text="@string/score_review_description"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textSize="18sp"
-                    android:textAlignment="textStart" />
             </LinearLayout>
 
-            <View style="@style/Divider"/>
+            <View style="@style/Divider" />
 
-            <LinearLayout
-                android:orientation="vertical"
+            <TextView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_horizontal"
-                android:layout_marginBottom="5dp">
+                android:layout_height="wrap_content"
+                android:text="@string/score_review_title"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="24sp" />
 
-                <TextView
-                    android:text="@string/limp_review_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textAlignment="center"
-                    android:textSize="24sp" />
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/chart"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:paddingTop="5dp" />
 
-                <com.github.mikephil.charting.charts.PieChart
-                    android:id="@+id/pieChart"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/score_review_description"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="5dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/limp_review_title"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="24sp" />
+
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pieChart"
+                android:layout_width="200dp"
+                android:layout_height="200dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/limp_review_description"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="5dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/trend_review_title"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="24sp" />
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.github.lzyzsd.circleprogress.DonutProgress
+                    android:id="@+id/donut_progress"
                     android:layout_width="200dp"
-                    android:layout_height="200dp" />
+                    android:layout_height="200dp"
+                    app:donut_finished_color="@color/blue"
+                    app:donut_progress="10"
+                    app:donut_text_color="@android:color/white"
+                    app:donut_unfinished_color="@android:color/white"
+                    app:donut_unfinished_stroke_width="4dp" />
+            </FrameLayout>
 
-                <TextView
-                    android:text="@string/limp_review_description"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textSize="18sp"
-                    android:textAlignment="textStart" />
-            </LinearLayout>
-
-            <View style="@style/Divider"/>
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_horizontal"
-                android:layout_marginBottom="5dp">
-
-                <TextView
-                    android:text="@string/trend_review_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textAlignment="center"
-                    android:textSize="24sp" />
-
-                <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <com.github.lzyzsd.circleprogress.DonutProgress
-                        android:id="@+id/donut_progress"
-                        android:layout_width="200dp"
-                        android:layout_height="200dp"
-                        app:donut_progress="10"
-                        app:donut_finished_color="@color/blue"
-                        app:donut_text_color="@android:color/white"
-                        app:donut_unfinished_stroke_width="4dp"
-                        app:donut_unfinished_color="@android:color/white"/>
-                </FrameLayout>
-
-                <TextView
-                    android:text="@string/trend_review_description"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textSize="18sp"
-                    android:textAlignment="textStart" />
-
-            </LinearLayout>
-
-            <View style="@style/Divider"/>
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center">
-
-                <TextView
-                    android:text="@string/good_score_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-                    android:textColor="@android:color/white"
-                    android:textSize="24sp"
-                    android:textAlignment="center" />
-
-                <TextView
-                    android:text="@string/good_score_description"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                    android:textSize="18sp"
-                    android:textAlignment="textStart" />
-            </LinearLayout>
-
-            <android.support.design.widget.FloatingActionButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                app:fabSize="mini"
-                app:srcCompat="@drawable/ic_done_white_24px"
-                android:id="@+id/doneButton"
-                app:backgroundTint="@color/green"
-                android:layout_margin="@dimen/fab_margin"
-                android:scaleType="center"/>
+                android:text="@string/trend_review_description"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="18sp" />
 
         </LinearLayout>
 
+        <View style="@style/Divider" />
 
-    </ScrollView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
 
-</RelativeLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/good_score_title"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="@android:color/white"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/good_score_description"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/doneButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/fab_margin"
+            android:clickable="true"
+            android:scaleType="center"
+            app:backgroundTint="@color/green"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_done_white_24px" />
+
+    </LinearLayout>
+
+</ScrollView>

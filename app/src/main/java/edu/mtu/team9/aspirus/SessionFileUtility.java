@@ -29,9 +29,9 @@ public class SessionFileUtility {
     private ArrayList<SessionFromJSONString> sessionsArrayList;
     private File JSONfile;
 
-    SessionFileUtility(Context context){
+    public SessionFileUtility(Context context){
         this.context = context;
-        sessionsArrayList = new ArrayList<SessionFromJSONString>();
+        sessionsArrayList = new ArrayList<>();
     }
 
     /**
@@ -69,6 +69,8 @@ public class SessionFileUtility {
         } catch (JSONException e) {
             Log.e(TAG,"ERROR: parse file as JSON data");
             return false;
+        }catch (NullPointerException e){
+            return false;
         }
         return true;
     }
@@ -84,7 +86,10 @@ public class SessionFileUtility {
         try {
 
             // Build new empty sessions file with an empty array.
-            JSONfile.createNewFile();
+            if(!JSONfile.createNewFile()){
+                Log.e(TAG, "Error creating new file");
+                return false;
+            }
             sessionsDataObject = new JSONObject("{}");
             sessionsDataObject.put("sessions_array", new JSONArray());
         } catch (IOException e) {
@@ -143,7 +148,7 @@ public class SessionFileUtility {
         }
 
         return saveSessionDataFile();
-    };
+    }
 
     /**
      *  Loads in the entire sessions data file to the global sessionsDataObject.
@@ -195,6 +200,10 @@ public class SessionFileUtility {
         return saveSessionDataFile();
     }
 
+    /**
+     * Gets the array list containing all the session objects saved in the system.
+     * @return an array list of Sessions.
+     */
     public ArrayList<SessionFromJSONString> getSessionsArrayLists() {
         return sessionsArrayList;
     }

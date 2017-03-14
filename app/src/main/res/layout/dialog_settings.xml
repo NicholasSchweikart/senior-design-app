@@ -4,28 +4,15 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    tools:context=".SettingsAuthFragment">
-    <EditText
-        android:id="@+id/username"
-        android:inputType="textEmailAddress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="4dp"
-        android:hint="username"
-        android:textColor="@android:color/black"/>
+    android:gravity="center_horizontal"
+    tools:context=".fragments.SettingsAuthFragment">
+
     <EditText
         android:id="@+id/password"
-        android:inputType="textPassword"
+        android:inputType="numberPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="16dp"
         android:fontFamily="sans-serif"
-        android:hint="password"
+        android:hint="@string/login_pin_field_label"
         android:textColor="@android:color/black"/>
 </LinearLayout>
