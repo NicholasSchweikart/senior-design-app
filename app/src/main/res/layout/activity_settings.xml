@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="edu.mtu.team9.aspirus.SettingsActivity">
+    tools:context="edu.mtu.team9.aspirus.activities.SettingsActivity">
 
     <include
         android:id="@+id/tool_bar"
@@ -32,7 +31,7 @@
             android:layout_weight=".75">
 
             <Button
-                android:text="Clear All Saved Data"
+                android:text="@string/clear_saved_data_button_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/clearSavedDataButton" />

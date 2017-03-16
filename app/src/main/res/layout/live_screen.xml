@@ -19,7 +19,7 @@
         android:textAppearance="@android:style/TextAppearance.Material.Display1"
         android:textColor="@android:color/white"
         android:textSize="60sp"
-        android:text="5:00"/>
+        android:text="@string/live_time_left_placeholder"/>
 
 
     <ProgressBar
@@ -31,7 +31,7 @@
         android:id="@+id/progressBar" />
 
     <TextView
-        android:text="Session Progress"
+        android:text="@string/live_session_progress_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"

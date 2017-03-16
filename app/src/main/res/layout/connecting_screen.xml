@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="connecting anklets..."
+        android:text="@string/connecting_anklets_text"
         android:textColor="@android:color/white" />
 
     <ProgressBar

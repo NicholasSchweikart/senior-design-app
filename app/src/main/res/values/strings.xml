@@ -7,7 +7,13 @@
 
     <string name="title_activity_settings">Settings</string>
 
-    <!-- Strings related to the session review activity -->
+    <!-- Strings related to MAIN ACTIVITY -->
+    <string name="main_activity_new_session_label">New Session</string>
+    <string name="main_activity_performance_history_label">Performance History</string>
+    <string name="main_activity_help_label">Help</string>
+    <string name="main_activity_legal_label">Legal</string>
+
+    <!-- Strings related to the SESSION REVIEW ACTIVITY -->
     <string name="score_overall">Overall Score</string>
 
     <string name="good_score_title">Great Work!</string>
@@ -24,9 +30,12 @@
     <string name="score_review_title">Score Throughout Session</string>
     <string name="score_review_description">This graph shows how your score progressed over the entire session. A great trend to see is a nearly flat line above 90. However, seeing a steady increase in your score over time is also a good sign; especially if you usually score below 80%.</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="dialog_reconnect_message">We are having trouble connecting your anklets, please ensure that everything is setup correctly</string>
-    <string name="dialog_reconnect_title">Connection Error</string>
+    <!-- Strings related to the LIVE ACTIVITY -->
+    <string name="live_session_progress_title">Session Progress</string>
+    <string name="live_time_left_placeholder">5:00</string>
+    <string name="connecting_anklets_text">connecting anklets&#8230;</string>
+    <string name="session_countdown_time_holder">--</string>
+    <string name="session_countdown_title">Session Beginning In</string>
 
     <!-- Strings related to the session LEGAL ACTIVITY -->
     <string name="legal_activity_title">Privacy Policy</string>
@@ -48,15 +57,23 @@
     <string name="legal_activity_children_subheading">Policy for children</string>
     <string name="legal_activity_children_subtext">This app and device  is not intended for persons under the age of 13. We do not knowingly collect any personally identifiable information from anyone under the age of 13. </string>
 
-    <!-- Strings related to Settings -->
+    <!-- Strings related to the session HELP ACTIVITY -->
+
+
+    <!-- Strings related to the session SETTINGS ACTIVITY -->
+    <string name="clear_saved_data_button_label">Clear All Saved Data</string>
+    <string name="login_pin_field_label">Enter Pin</string>
 
     <!-- Example General settings -->
-
     <string name="pref_title_access_pin">Access Pin</string>
     <string name="pref_title_access">System Protection</string>
     <string name="pref_default_access_pin">1212</string>
     <string name="pref_title_data_behaviour">System Behaviour</string>
     <string name="pref_title_datalog_enable">Enable Data Logging</string>
     <string name="pref_datalog_summary">Allows the device to store data for every user session.</string>
+
+    <string name="dialog_reconnect_message">We are having trouble connecting your anklets, please ensure that everything is setup correctly</string>
+    <string name="dialog_reconnect_title">Connection Error</string>
+    <string name="logging_activity_menu_label">Logging</string>
 
 </resources>

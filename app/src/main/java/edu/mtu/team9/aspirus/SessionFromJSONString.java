@@ -13,22 +13,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created for Aspirus2
- * By: nicholas on 2/19/17.
- * Description:
+ * Created by Nicholas Schweikart, CPE, for Biomedical Senior Design Team 9
+ * Description: This class is a simple utility used to convert a JSON string into a Session Object.
  */
 
 public class SessionFromJSONString {
     private final static String TAG = "session-from-json";
+
     private ArrayList<Integer> scores;
     private int left_leg_percent, right_leg_percent, leg_score, trendelenburg_percentage, trendelenburg_score, final_score;
     private JSONObject jsonSession;
     private LineDataSet lineDataSet = null;
+    private String date;
 
-    SessionFromJSONString(String jsonSessionString){
+    public SessionFromJSONString(String jsonSessionString){
 
-        List<Entry> entries = new ArrayList<Entry>();
-        scores = new ArrayList<Integer>();
+        List<Entry> entries = new ArrayList<>();
+        scores = new ArrayList<>();
         try {
             jsonSession = new JSONObject(jsonSessionString);
             JSONArray scoresJSONArray = jsonSession.getJSONArray("scores_array");
@@ -44,6 +45,7 @@ public class SessionFromJSONString {
             trendelenburg_score = jsonSession.getInt("trendelenburg_score");
             trendelenburg_percentage = jsonSession.getInt("trendelenburg_percentage");
             final_score = jsonSession.getInt("final_score");
+            date = jsonSession.getString("date");
         }catch (JSONException e){
             Log.e(TAG,"Error parsing JSON");
         }
@@ -71,4 +73,5 @@ public class SessionFromJSONString {
         return trendelenburg_percentage;
     }
     public LineDataSet getScoresLineDataSet(){return lineDataSet;}
+    public String getDate(){return this.date;}
 }

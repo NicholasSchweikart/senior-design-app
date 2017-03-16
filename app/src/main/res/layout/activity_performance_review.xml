@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="edu.mtu.team9.aspirus.PerformanceReviewActivity"
+    tools:context="edu.mtu.team9.aspirus.activities.PerformanceReviewActivity"
     android:layout_margin="@dimen/activity_horizontal_margin">
 
     <include
@@ -16,7 +16,13 @@
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/mainChart"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="250dp"
         android:layout_below="@+id/tool_bar"/>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/mainChart"
+        android:id="@+id/sessionsListView"/>
 
 </RelativeLayout>
